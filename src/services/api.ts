@@ -149,6 +149,13 @@ export interface OrdersListResponse {
   pageSize: number;
 }
 
+export interface RolePermissionsResponse {
+  owner: string[];
+  manager: string[];
+  staff: string[];
+  updatedAt: string | null;
+}
+
 export const api = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getMe: build.query<UserProfileResponse, void>({
@@ -234,6 +241,15 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Shops'],
     }),
+    // Role permissions
+    getRolePermissions: build.query<RolePermissionsResponse, void>({
+      query: () => '/admin/role-permissions',
+      providesTags: ['RolePermissions'],
+    }),
+    updateRolePermissions: build.mutation<RolePermissionsResponse, { manager: string[]; staff: string[] }>({
+      query: (body) => ({ url: '/admin/role-permissions', method: 'PUT', body }),
+      invalidatesTags: ['RolePermissions'],
+    }),
   }),
 });
 
@@ -254,4 +270,6 @@ export const {
   useGetOrdersByShopQuery,
   useApproveShopNameChangeMutation,
   useRejectShopNameChangeMutation,
+  useGetRolePermissionsQuery,
+  useUpdateRolePermissionsMutation,
 } = api;
