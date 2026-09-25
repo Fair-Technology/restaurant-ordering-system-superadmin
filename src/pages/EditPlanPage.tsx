@@ -4,7 +4,7 @@ import { useGetPlanQuery, useUpdatePlanMutation } from '../services/api';
 import type { PlanLimitResponse } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
-const LIMIT_KEYS = ['PRODUCT_LIMIT'];
+const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'];
 
 export function EditPlanPage() {
   const { planId } = useParams<{ planId: string }>();

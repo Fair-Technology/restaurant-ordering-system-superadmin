@@ -116,13 +116,10 @@ export interface ShopSubscriptionResponse {
 }
 
 export interface ShopUsageResponse {
-  id: string;
   shopId: string;
-  activeProductCount: number;
-  periodStart: string | null;
-  periodEnd: string | null;
+  periodKey: string;
+  acceptedOrderCount: number;
   lastReconciled: string | null;
-  createdAt: string;
   updatedAt: string;
 }
 
@@ -208,7 +205,7 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: (_result, _err, { shopId }) => [{ type: 'Subscriptions', id: shopId }],
     }),
     // Usage
-    getShopUsage: build.query<{ usage: ShopUsageResponse }, { shopId: string }>({
+    getShopUsage: build.query<{ usage: ShopUsageResponse; ordersPerMonthLimit: number | null }, { shopId: string }>({
       query: ({ shopId }) => `/shops/${shopId}/usage`,
       providesTags: (_result, _err, { shopId }) => [{ type: 'Usage', id: shopId }],
     }),
