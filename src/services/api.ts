@@ -137,7 +137,9 @@ export interface OrderItemDto {
 export interface OrderDto {
   id: string;
   orderRef: string;
-  status: string;
+  displayState: string;
+  fulfilmentMode: string;
+  paymentStatus: string;
   items: OrderItemDto[];
   subtotalCents: number;
   currency: string;

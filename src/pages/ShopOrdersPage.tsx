@@ -5,24 +5,30 @@ import { ChevronLeft, ChevronLeft as Prev, ChevronRight as Next } from 'lucide-r
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const STATUS_LABELS: Record<string, string> = {
-  paid: 'Paid',
-  pending_payment: 'Pending',
-  failed: 'Failed',
-  cancelled: 'Cancelled',
-  refunded: 'Refunded',
+  PLACED: 'Placed',
+  ACCEPTED: 'Accepted',
+  IN_PREPARATION: 'In preparation',
+  READY: 'Ready',
+  OUT_FOR_DELIVERY: 'Out for delivery',
+  COMPLETED: 'Completed',
+  REJECTED: 'Rejected',
+  CANCELLED: 'Cancelled',
 };
 
-function statusBadgeClass(status: string) {
-  switch (status) {
-    case 'paid':
-      return 'bg-green-100 text-green-700';
-    case 'pending_payment':
+function statusBadgeClass(displayState: string) {
+  switch (displayState) {
+    case 'PLACED':
+    case 'ACCEPTED':
+      return 'bg-blue-100 text-blue-700';
+    case 'IN_PREPARATION':
       return 'bg-yellow-100 text-yellow-700';
-    case 'failed':
-    case 'cancelled':
+    case 'READY':
+    case 'OUT_FOR_DELIVERY':
+    case 'COMPLETED':
+      return 'bg-green-100 text-green-700';
+    case 'REJECTED':
+    case 'CANCELLED':
       return 'bg-red-100 text-red-600';
-    case 'refunded':
-      return 'bg-gray-100 text-gray-600';
     default:
       return 'bg-gray-100 text-gray-600';
   }
@@ -102,9 +108,9 @@ export function ShopOrdersPage() {
                     <td className="px-6 py-4 font-mono text-xs text-indigo-900">{order.orderRef}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${statusBadgeClass(order.status)}`}
+                        className={`inline-block text-xs px-2 py-0.5 rounded font-medium ${statusBadgeClass(order.displayState)}`}
                       >
-                        {STATUS_LABELS[order.status] ?? order.status}
+                        {STATUS_LABELS[order.displayState] ?? order.displayState}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-600 hidden md:table-cell">
