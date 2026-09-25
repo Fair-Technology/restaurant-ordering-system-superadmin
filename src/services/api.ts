@@ -156,6 +156,46 @@ export interface RolePermissionsResponse {
   updatedAt: string | null;
 }
 
+// Reference lists (allergens, additives, tax classes and tax rates)
+export interface LocalizedLabel {
+  de: string;
+  en: string;
+}
+
+export interface ReferenceEntry {
+  id: string;
+  labels: LocalizedLabel;
+  isActive: boolean;
+}
+
+export interface AdditiveEntry extends ReferenceEntry {
+  code: number;
+}
+
+export type FulfilmentModeKey = 'collection' | 'delivery' | 'dine_in';
+
+export interface TaxRateRowDto {
+  taxClassId: string;
+  fulfilmentMode: FulfilmentModeKey;
+  rateBasisPoints: number;
+  effectiveFrom: string;
+}
+
+export interface ReferenceListsUpdateBody {
+  allergens: ReferenceEntry[];
+  additives: AdditiveEntry[];
+  taxClasses: ReferenceEntry[];
+  defaultTaxClassId: string | null;
+  taxRates: TaxRateRowDto[];
+}
+
+export interface ReferenceListsResponse extends ReferenceListsUpdateBody {
+  countryCode: string;
+  currentTaxRates: { taxClassId: string; rates: Record<FulfilmentModeKey, number | null> }[];
+  taxRatesUniformAcrossModes: boolean;
+  updatedAt: string | null;
+}
+
 export const api = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getMe: build.query<UserProfileResponse, void>({
@@ -250,6 +290,22 @@ export const api = baseApi.injectEndpoints({
       query: (body) => ({ url: '/admin/role-permissions', method: 'PUT', body }),
       invalidatesTags: ['RolePermissions'],
     }),
+    // Reference lists
+    getReferenceLists: build.query<ReferenceListsResponse, { countryCode: string }>({
+      query: ({ countryCode }) => `/reference-lists/${countryCode}`,
+      providesTags: (_result, _err, { countryCode }) => [{ type: 'ReferenceLists', id: countryCode }],
+    }),
+    updateReferenceLists: build.mutation<
+      ReferenceListsResponse,
+      { countryCode: string; body: ReferenceListsUpdateBody }
+    >({
+      query: ({ countryCode, body }) => ({
+        url: `/admin/reference-lists/${countryCode}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: (_result, _err, { countryCode }) => [{ type: 'ReferenceLists', id: countryCode }],
+    }),
   }),
 });
 
@@ -272,4 +328,6 @@ export const {
   useRejectShopNameChangeMutation,
   useGetRolePermissionsQuery,
   useUpdateRolePermissionsMutation,
+  useGetReferenceListsQuery,
+  useUpdateReferenceListsMutation,
 } = api;
