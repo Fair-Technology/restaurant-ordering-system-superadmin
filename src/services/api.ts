@@ -42,17 +42,13 @@ export interface AuditEntry {
   id: string;
   shopId: string;
   timestamp: string;
+  actorType: 'owner' | 'staff' | 'superadmin' | 'system';
   actorId: string;
-  actorEmail?: string;
-  actorName?: string;
   action: string;
   entityType: string;
   entityId: string;
   entityName: string;
   changes?: AuditChange[];
-  ipAddress?: string;
-  userAgent?: string;
-  ttl: number;
 }
 
 export interface AuditEntriesResponse {
@@ -60,6 +56,7 @@ export interface AuditEntriesResponse {
   total: number;
   page: number;
   pageSize: number;
+  actorLabels: Record<string, string>;
 }
 
 // Plan types

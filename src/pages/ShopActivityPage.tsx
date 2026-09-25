@@ -9,16 +9,16 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   product: 'Product',
   category: 'Category',
   shop: 'Shop',
-  member: 'Member',
-  role: 'Role',
+  staff: 'Staff',
+  subscription: 'Subscription',
 };
 
 const ENTITY_TYPE_COLORS: Record<string, string> = {
   product: 'bg-blue-100 text-blue-700',
   category: 'bg-green-100 text-green-700',
   shop: 'bg-purple-100 text-purple-700',
-  member: 'bg-orange-100 text-orange-700',
-  role: 'bg-pink-100 text-pink-700',
+  staff: 'bg-orange-100 text-orange-700',
+  subscription: 'bg-pink-100 text-pink-700',
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -37,7 +37,7 @@ const ACTION_LABELS: Record<string, string> = {
   'role.delete': 'deleted role',
 };
 
-const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'member', 'role'] as const;
+const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription'] as const;
 
 function formatValue(v: unknown): string {
   if (v === null || v === undefined) return '—';
@@ -46,13 +46,12 @@ function formatValue(v: unknown): string {
   return String(v);
 }
 
-function AuditEntryCard({ entry }: { entry: AuditEntry }) {
+function AuditEntryCard({ entry, actorLabel }: { entry: AuditEntry; actorLabel: string }) {
   const [expanded, setExpanded] = useState(false);
-  const actor = entry.actorName ?? entry.actorEmail ?? entry.actorId;
   const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
   const badgeClass = ENTITY_TYPE_COLORS[entry.entityType] ?? 'bg-gray-100 text-gray-700';
   const badgeLabel = ENTITY_TYPE_LABELS[entry.entityType] ?? entry.entityType;
-  const hasDetails = (entry.changes && entry.changes.length > 0) || entry.ipAddress;
+  const hasDetails = entry.changes && entry.changes.length > 0;
 
   return (
     <div className="glass-card p-4">
@@ -63,7 +62,7 @@ function AuditEntryCard({ entry }: { entry: AuditEntry }) {
           </span>
           <div className="min-w-0">
             <p className="text-sm text-gray-700">
-              <span className="font-medium text-indigo-900">{actor}</span>{' '}
+              <span className="font-medium text-indigo-900">{actorLabel}</span>{' '}
               {actionLabel}{' '}
               <span className="font-semibold text-indigo-800">{entry.entityName}</span>
             </p>
@@ -101,9 +100,6 @@ function AuditEntryCard({ entry }: { entry: AuditEntry }) {
                 </div>
               ))}
             </div>
-          )}
-          {entry.ipAddress && (
-            <p className="text-xs text-gray-400">IP: {entry.ipAddress}</p>
           )}
         </div>
       )}
@@ -179,7 +175,11 @@ export function ShopActivityPage() {
       {!isError && filtered.length > 0 && (
         <div className="space-y-3">
           {filtered.map((entry) => (
-            <AuditEntryCard key={entry.id} entry={entry} />
+            <AuditEntryCard
+              key={entry.id}
+              entry={entry}
+              actorLabel={data?.actorLabels[`${entry.actorType}:${entry.actorId}`] ?? entry.actorId}
+            />
           ))}
         </div>
       )}
