@@ -283,11 +283,11 @@ export const api = baseApi.injectEndpoints({
     }),
     // Role permissions
     getRolePermissions: build.query<RolePermissionsResponse, void>({
-      query: () => '/admin/role-permissions',
+      query: () => '/platform/role-permissions',
       providesTags: ['RolePermissions'],
     }),
     updateRolePermissions: build.mutation<RolePermissionsResponse, { manager: string[]; staff: string[] }>({
-      query: (body) => ({ url: '/admin/role-permissions', method: 'PUT', body }),
+      query: (body) => ({ url: '/platform/role-permissions', method: 'PUT', body }),
       invalidatesTags: ['RolePermissions'],
     }),
     // Reference lists
@@ -300,7 +300,7 @@ export const api = baseApi.injectEndpoints({
       { countryCode: string; body: ReferenceListsUpdateBody }
     >({
       query: ({ countryCode, body }) => ({
-        url: `/admin/reference-lists/${countryCode}`,
+        url: `/platform/reference-lists/${countryCode}`,
         method: 'PUT',
         body,
       }),
