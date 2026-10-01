@@ -30,11 +30,10 @@ const ACTION_LABELS: Record<string, string> = {
   'category.delete': 'deleted category',
   'shop.update': 'updated shop',
   'shop.logo': 'updated shop logo',
-  'member.add': 'added member',
-  'member.remove': 'removed member',
-  'role.create': 'created role',
-  'role.update': 'updated role',
-  'role.delete': 'deleted role',
+  'shop.legal_update': 'updated legal pages',
+  'shop.dpa_accept': 'accepted the data processing agreement',
+  'shop.data_export': 'exported restaurant data',
+  'customer.erase': 'anonymised a customer',
 };
 
 const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription'] as const;
