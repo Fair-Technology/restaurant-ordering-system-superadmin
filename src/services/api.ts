@@ -42,17 +42,13 @@ export interface AuditEntry {
   id: string;
   shopId: string;
   timestamp: string;
+  actorType: 'owner' | 'staff' | 'superadmin' | 'system';
   actorId: string;
-  actorEmail?: string;
-  actorName?: string;
   action: string;
   entityType: string;
   entityId: string;
   entityName: string;
   changes?: AuditChange[];
-  ipAddress?: string;
-  userAgent?: string;
-  ttl: number;
 }
 
 export interface AuditEntriesResponse {
@@ -60,6 +56,7 @@ export interface AuditEntriesResponse {
   total: number;
   page: number;
   pageSize: number;
+  actorLabels: Record<string, string>;
 }
 
 // Plan types
@@ -116,13 +113,10 @@ export interface ShopSubscriptionResponse {
 }
 
 export interface ShopUsageResponse {
-  id: string;
   shopId: string;
-  activeProductCount: number;
-  periodStart: string | null;
-  periodEnd: string | null;
+  periodKey: string;
+  acceptedOrderCount: number;
   lastReconciled: string | null;
-  createdAt: string;
   updatedAt: string;
 }
 
@@ -137,7 +131,9 @@ export interface OrderItemDto {
 export interface OrderDto {
   id: string;
   orderRef: string;
-  status: string;
+  displayState: string;
+  fulfilmentMode: string;
+  paymentStatus: string;
   items: OrderItemDto[];
   subtotalCents: number;
   currency: string;
@@ -151,6 +147,53 @@ export interface OrdersListResponse {
   total: number;
   page: number;
   pageSize: number;
+}
+
+export interface RolePermissionsResponse {
+  owner: string[];
+  manager: string[];
+  staff: string[];
+  updatedAt: string | null;
+}
+
+// Reference lists (allergens, additives, tax classes and tax rates)
+export interface LocalizedLabel {
+  de: string;
+  en: string;
+}
+
+export interface ReferenceEntry {
+  id: string;
+  labels: LocalizedLabel;
+  isActive: boolean;
+}
+
+export interface AdditiveEntry extends ReferenceEntry {
+  code: number;
+}
+
+export type FulfilmentModeKey = 'collection' | 'delivery' | 'dine_in';
+
+export interface TaxRateRowDto {
+  taxClassId: string;
+  fulfilmentMode: FulfilmentModeKey;
+  rateBasisPoints: number;
+  effectiveFrom: string;
+}
+
+export interface ReferenceListsUpdateBody {
+  allergens: ReferenceEntry[];
+  additives: AdditiveEntry[];
+  taxClasses: ReferenceEntry[];
+  defaultTaxClassId: string | null;
+  taxRates: TaxRateRowDto[];
+}
+
+export interface ReferenceListsResponse extends ReferenceListsUpdateBody {
+  countryCode: string;
+  currentTaxRates: { taxClassId: string; rates: Record<FulfilmentModeKey, number | null> }[];
+  taxRatesUniformAcrossModes: boolean;
+  updatedAt: string | null;
 }
 
 export const api = baseApi.injectEndpoints({
@@ -206,7 +249,7 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: (_result, _err, { shopId }) => [{ type: 'Subscriptions', id: shopId }],
     }),
     // Usage
-    getShopUsage: build.query<{ usage: ShopUsageResponse }, { shopId: string }>({
+    getShopUsage: build.query<{ usage: ShopUsageResponse; ordersPerMonthLimit: number | null }, { shopId: string }>({
       query: ({ shopId }) => `/shops/${shopId}/usage`,
       providesTags: (_result, _err, { shopId }) => [{ type: 'Usage', id: shopId }],
     }),
@@ -238,6 +281,31 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Shops'],
     }),
+    // Role permissions
+    getRolePermissions: build.query<RolePermissionsResponse, void>({
+      query: () => '/platform/role-permissions',
+      providesTags: ['RolePermissions'],
+    }),
+    updateRolePermissions: build.mutation<RolePermissionsResponse, { manager: string[]; staff: string[] }>({
+      query: (body) => ({ url: '/platform/role-permissions', method: 'PUT', body }),
+      invalidatesTags: ['RolePermissions'],
+    }),
+    // Reference lists
+    getReferenceLists: build.query<ReferenceListsResponse, { countryCode: string }>({
+      query: ({ countryCode }) => `/reference-lists/${countryCode}`,
+      providesTags: (_result, _err, { countryCode }) => [{ type: 'ReferenceLists', id: countryCode }],
+    }),
+    updateReferenceLists: build.mutation<
+      ReferenceListsResponse,
+      { countryCode: string; body: ReferenceListsUpdateBody }
+    >({
+      query: ({ countryCode, body }) => ({
+        url: `/platform/reference-lists/${countryCode}`,
+        method: 'PUT',
+        body,
+      }),
+      invalidatesTags: (_result, _err, { countryCode }) => [{ type: 'ReferenceLists', id: countryCode }],
+    }),
   }),
 });
 
@@ -258,4 +326,8 @@ export const {
   useGetOrdersByShopQuery,
   useApproveShopNameChangeMutation,
   useRejectShopNameChangeMutation,
+  useGetRolePermissionsQuery,
+  useUpdateRolePermissionsMutation,
+  useGetReferenceListsQuery,
+  useUpdateReferenceListsMutation,
 } = api;

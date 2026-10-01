@@ -12,6 +12,8 @@ import { PlanPricingPage } from '../pages/PlanPricingPage';
 import { ShopSubscriptionPage } from '../pages/ShopSubscriptionPage';
 import { ShopUsagePage } from '../pages/ShopUsagePage';
 import { NameChangeRequestsPage } from '../pages/NameChangeRequestsPage';
+import { RolePermissionsPage } from '../pages/RolePermissionsPage';
+import { ReferenceListsPage } from '../pages/ReferenceListsPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,6 +37,8 @@ export const router = createBrowserRouter([
       { path: 'plans', element: <PlansPage /> },
       { path: 'plans/:planId', element: <EditPlanPage /> },
       { path: 'plans/:planId/pricing', element: <PlanPricingPage /> },
+      { path: 'role-permissions', element: <RolePermissionsPage /> },
+      { path: 'reference-lists', element: <ReferenceListsPage /> },
       { path: 'name-change-requests', element: <NameChangeRequestsPage /> },
     ],
   },

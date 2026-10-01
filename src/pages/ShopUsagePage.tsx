@@ -14,6 +14,9 @@ export function ShopUsagePage() {
   );
 
   const usage = reconcileData?.usage ?? data.usage;
+  const ordersPerMonthLimit = data.ordersPerMonthLimit;
+  const limitLabel =
+    ordersPerMonthLimit === null ? null : ordersPerMonthLimit === -1 ? '/ unlimited' : `/ ${ordersPerMonthLimit}`;
 
   return (
     <div>
@@ -32,8 +35,11 @@ export function ShopUsagePage() {
 
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Active Products</p>
-            <p className="text-4xl font-semibold text-indigo-900">{usage.activeProductCount}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Accepted orders — {usage.periodKey}</p>
+            <p className="text-4xl font-semibold text-indigo-900">
+              {usage.acceptedOrderCount}
+              {limitLabel && <span className="text-lg font-normal text-gray-500"> {limitLabel}</span>}
+            </p>
           </div>
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Last Reconciled</p>
@@ -43,24 +49,9 @@ export function ShopUsagePage() {
           </div>
         </div>
 
-        {usage.periodStart && (
-          <div className="pt-4 border-t border-white/30 grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Period Start</p>
-              <p className="text-sm text-gray-700">{new Date(usage.periodStart).toLocaleDateString()}</p>
-            </div>
-            {usage.periodEnd && (
-              <div>
-                <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Period End</p>
-                <p className="text-sm text-gray-700">{new Date(usage.periodEnd).toLocaleDateString()}</p>
-              </div>
-            )}
-          </div>
-        )}
-
         {reconcileData && (
           <p className="text-green-600 text-sm">
-            Reconciled: counted {reconcileData.reconciledCount} active products.
+            Reconciled: counted {reconcileData.reconciledCount} accepted orders this month.
           </p>
         )}
 
