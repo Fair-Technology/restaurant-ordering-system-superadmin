@@ -10,6 +10,7 @@ import {
   LogOut,
   Lock,
   ListChecks,
+  Scale,
 } from 'lucide-react';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -69,6 +70,10 @@ export function Sidebar() {
         <NavLink to="/reference-lists" className={navLinkClass}>
           <ListChecks className="w-4 h-4 flex-shrink-0" />
           Food &amp; tax lists
+        </NavLink>
+        <NavLink to="/platform-legal" className={navLinkClass}>
+          <Scale className="w-4 h-4 flex-shrink-0" />
+          Legal
         </NavLink>
         <NavLink to="/name-change-requests" className={navLinkClass}>
           <FileEdit className="w-4 h-4 flex-shrink-0" />

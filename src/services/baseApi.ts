@@ -30,6 +30,7 @@ export const baseApi = createApi({
     'Orders',
     'RolePermissions',
     'ReferenceLists',
+    'PlatformLegal',
   ],
   endpoints: () => ({}),
 });
