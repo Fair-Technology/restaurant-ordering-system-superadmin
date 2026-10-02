@@ -196,6 +196,48 @@ export interface ReferenceListsResponse extends ReferenceListsUpdateBody {
   updatedAt: string | null;
 }
 
+// Platform legal identity (who the platform is, shown in every restaurant's privacy notice)
+export interface PlatformOperator {
+  legalName: string;
+  address: string;
+  email: string;
+}
+
+export interface EuRepresentative {
+  name: string;
+  address: string;
+  email: string;
+}
+
+export interface PlatformLegalIdentityUpdateBody {
+  platformName: string;
+  salesSiteUrl: string | null;
+  operator: PlatformOperator;
+  euRepresentative: EuRepresentative | null;
+}
+
+export interface PlatformLegalIdentityResponse extends PlatformLegalIdentityUpdateBody {
+  updatedAt: string | null;
+  updatedBy: string | null;
+}
+
+export interface SubProcessorDto {
+  id: 'azure' | 'entra' | 'acs';
+  name: string;
+  purpose: LocalizedLabel;
+  location: LocalizedLabel;
+}
+
+export interface PlatformLegalPublicResponse {
+  platformName: string;
+  salesSiteUrl: string | null;
+  operator: PlatformOperator;
+  euRepresentative: EuRepresentative | null;
+  subProcessors: SubProcessorDto[];
+  currentDpaVersion: string;
+  currentDpaIsDraft: boolean;
+}
+
 export const api = baseApi.injectEndpoints({
   endpoints: (build) => ({
     getMe: build.query<UserProfileResponse, void>({
@@ -306,6 +348,19 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: (_result, _err, { countryCode }) => [{ type: 'ReferenceLists', id: countryCode }],
     }),
+    // Platform legal identity
+    getPlatformLegalIdentity: build.query<PlatformLegalIdentityResponse, void>({
+      query: () => '/platform/legal-identity',
+      providesTags: ['PlatformLegal'],
+    }),
+    updatePlatformLegalIdentity: build.mutation<PlatformLegalIdentityResponse, PlatformLegalIdentityUpdateBody>({
+      query: (body) => ({ url: '/platform/legal-identity', method: 'PUT', body }),
+      invalidatesTags: ['PlatformLegal'],
+    }),
+    getPlatformLegalPublic: build.query<PlatformLegalPublicResponse, void>({
+      query: () => '/legal/platform',
+      providesTags: ['PlatformLegal'],
+    }),
   }),
 });
 
@@ -330,4 +385,7 @@ export const {
   useUpdateRolePermissionsMutation,
   useGetReferenceListsQuery,
   useUpdateReferenceListsMutation,
+  useGetPlatformLegalIdentityQuery,
+  useUpdatePlatformLegalIdentityMutation,
+  useGetPlatformLegalPublicQuery,
 } = api;
