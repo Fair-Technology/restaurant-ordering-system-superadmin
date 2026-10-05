@@ -12,6 +12,7 @@ const ENTITY_TYPE_LABELS: Record<string, string> = {
   staff: 'Staff',
   subscription: 'Subscription',
   customer: 'Customer',
+  order: 'Order',
 };
 
 const ENTITY_TYPE_COLORS: Record<string, string> = {
@@ -21,6 +22,7 @@ const ENTITY_TYPE_COLORS: Record<string, string> = {
   staff: 'bg-orange-100 text-orange-700',
   subscription: 'bg-pink-100 text-pink-700',
   customer: 'bg-teal-100 text-teal-700',
+  order: 'bg-amber-100 text-amber-700',
 };
 
 const ACTION_LABELS: Record<string, string> = {
@@ -37,9 +39,10 @@ const ACTION_LABELS: Record<string, string> = {
   'shop.data_export': 'exported restaurant data',
   'customer.erase': 'anonymised a customer',
   'shop.order_settings_update': 'updated order alert settings',
+  'order.refund': 'refunded an order',
 };
 
-const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer'] as const;
+const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order'] as const;
 
 function formatValue(v: unknown): string {
   if (v === null || v === undefined) return '—';
