@@ -36,7 +36,7 @@ function limitLabel(value: number): string {
 export function ShopSubscriptionPage() {
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGetShopSubscriptionQuery({ shopId: shopId! });
+  const { data, isLoading, isError, isFetching } = useGetShopSubscriptionQuery({ shopId: shopId! });
   const { data: plansData } = useGetPlansQuery();
   const [override, { isLoading: isOverriding }] = useOverrideShopSubscriptionMutation();
 
@@ -53,6 +53,11 @@ export function ShopSubscriptionPage() {
   const [limitReason, setLimitReason] = useState('');
   const [limitExpiresAt, setLimitExpiresAt] = useState('');
   const [limitError, setLimitError] = useState<string | null>(null);
+  // The card only changes once the subscription refetch lands (a few seconds after
+  // the save itself), so the save counts as in progress until then.
+  const [limitDone, setLimitDone] = useState<'set' | 'clear' | null>(null);
+  const settingLimit = isSettingLimit || (limitDone === 'set' && isFetching);
+  const clearingLimit = isClearingLimit || (limitDone === 'clear' && isFetching);
 
   async function handleOverride() {
     setOverrideError(null);
@@ -84,6 +89,7 @@ export function ShopSubscriptionPage() {
 
   async function handleSetLimit() {
     setLimitError(null);
+    setLimitDone(null);
     const value = Number(limitValue);
     if (limitValue.trim() === '' || !Number.isInteger(value) || value < -1) {
       setLimitError('Enter a whole number, -1 or higher');
@@ -102,6 +108,7 @@ export function ShopSubscriptionPage() {
           expiresAt: limitExpiresAt ? endOfDayIso(limitExpiresAt) : null,
         },
       }).unwrap();
+      setLimitDone('set');
       setLimitValue('');
       setLimitReason('');
       setLimitExpiresAt('');
@@ -112,8 +119,10 @@ export function ShopSubscriptionPage() {
 
   async function handleClearLimit() {
     setLimitError(null);
+    setLimitDone(null);
     try {
       await clearLimitOverride({ shopId: shopId! }).unwrap();
+      setLimitDone('clear');
     } catch (err) {
       setLimitError(serverError(err, 'Failed to remove limit override'));
     }
@@ -294,10 +303,10 @@ export function ShopSubscriptionPage() {
               )}
               <button
                 onClick={handleClearLimit}
-                disabled={isClearingLimit}
+                disabled={clearingLimit || settingLimit}
                 className="border border-red-300 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
               >
-                {isClearingLimit ? 'Removing…' : 'Remove'}
+                {clearingLimit ? 'Removing…' : 'Remove'}
               </button>
             </div>
           ) : (
@@ -349,13 +358,18 @@ export function ShopSubscriptionPage() {
           </div>
 
           {limitError && <p className="text-red-500 text-sm">{limitError}</p>}
+          {limitDone && !settingLimit && !clearingLimit && (
+            <p className="text-green-600 text-sm">
+              {limitDone === 'set' ? 'Limit override saved.' : 'Limit override removed.'}
+            </p>
+          )}
 
           <button
             onClick={handleSetLimit}
-            disabled={isSettingLimit}
+            disabled={settingLimit || clearingLimit}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
-            {isSettingLimit ? 'Saving…' : 'Set Limit Override'}
+            {settingLimit ? 'Saving…' : 'Set Limit Override'}
           </button>
         </div>
       </div>
