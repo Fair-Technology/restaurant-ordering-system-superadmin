@@ -110,8 +110,17 @@ export interface ShopSubscriptionResponse {
   overrideExpiresAt: string | null;
   limitOverride?: LimitOverrideResponse | null;
   planBeforeOverride?: string | null;
+  scheduledChange?: ScheduledPlanChangeResponse | null;
+  paymentFailedAt?: string | null;
+  graceWarningsSent?: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface ScheduledPlanChangeResponse {
+  planId: string;
+  billingInterval: 'monthly' | 'yearly';
+  effectiveAt: string;
 }
 
 export interface LimitOverrideResponse {
@@ -127,6 +136,8 @@ export interface EntitlementsResponse {
   limits: Record<string, number>;
   limitOverrideActive: boolean;
   planOverrideExpired: boolean;
+  graceEndsAt?: string | null;
+  droppedForNonPayment?: boolean;
 }
 
 export type WarningLevel = 0 | 80 | 90 | 95 | 100;
