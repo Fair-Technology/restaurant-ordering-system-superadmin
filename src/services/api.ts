@@ -108,8 +108,54 @@ export interface ShopSubscriptionResponse {
   overriddenBy: string | null;
   overrideReason: string | null;
   overrideExpiresAt: string | null;
+  limitOverride?: LimitOverrideResponse | null;
+  planBeforeOverride?: string | null;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LimitOverrideResponse {
+  limits: PlanLimitResponse[];
+  reason: string;
+  expiresAt: string | null;
+  setBy: string;
+  setAt: string;
+}
+
+export interface EntitlementsResponse {
+  planId: string;
+  limits: Record<string, number>;
+  limitOverrideActive: boolean;
+  planOverrideExpired: boolean;
+}
+
+export type WarningLevel = 0 | 80 | 90 | 95 | 100;
+
+export interface OrderLimitStatus {
+  periodKey: string;
+  acceptedOrderCount: number;
+  limit: number | null;
+  warningLevel: WarningLevel;
+  limitReached: boolean;
+}
+
+export type RejectionFlag = 'high_rate' | 'spike_near_limit';
+
+export interface RejectionStats {
+  windowDays: number;
+  accepted: number;
+  rejectedByRestaurant: number;
+  rate: number | null;
+  recentRejections: number;
+  flags: RejectionFlag[];
+}
+
+export interface RejectionWatchRow {
+  shopId: string;
+  name: string;
+  slug: string;
+  orderLimit: OrderLimitStatus;
+  rejections: RejectionStats;
 }
 
 export interface ShopUsageResponse {
@@ -282,7 +328,7 @@ export const api = baseApi.injectEndpoints({
       invalidatesTags: (_result, _err, { planId }) => [{ type: 'Plans', id: `pricing-${planId}` }],
     }),
     // Subscriptions
-    getShopSubscription: build.query<{ subscription: ShopSubscriptionResponse; plan: PlanResponse | null }, { shopId: string }>({
+    getShopSubscription: build.query<{ subscription: ShopSubscriptionResponse; plan: PlanResponse | null; entitlements: EntitlementsResponse }, { shopId: string }>({
       query: ({ shopId }) => `/shops/${shopId}/subscription`,
       providesTags: (_result, _err, { shopId }) => [{ type: 'Subscriptions', id: shopId }],
     }),
@@ -290,10 +336,22 @@ export const api = baseApi.injectEndpoints({
       query: ({ shopId, overrideRequest }) => ({ url: `/shops/${shopId}/subscription/override`, method: 'POST', body: overrideRequest }),
       invalidatesTags: (_result, _err, { shopId }) => [{ type: 'Subscriptions', id: shopId }],
     }),
+    setLimitOverride: build.mutation<{ subscription: ShopSubscriptionResponse }, { shopId: string; body: { limits: PlanLimitResponse[]; reason: string; expiresAt?: string | null } }>({
+      query: ({ shopId, body }) => ({ url: `/shops/${shopId}/subscription/limit-override`, method: 'PUT', body }),
+      invalidatesTags: (_result, _err, { shopId }) => [{ type: 'Subscriptions', id: shopId }],
+    }),
+    clearLimitOverride: build.mutation<{ subscription: ShopSubscriptionResponse }, { shopId: string }>({
+      query: ({ shopId }) => ({ url: `/shops/${shopId}/subscription/limit-override`, method: 'DELETE' }),
+      invalidatesTags: (_result, _err, { shopId }) => [{ type: 'Subscriptions', id: shopId }],
+    }),
     // Usage
-    getShopUsage: build.query<{ usage: ShopUsageResponse; ordersPerMonthLimit: number | null }, { shopId: string }>({
+    getShopUsage: build.query<{ usage: ShopUsageResponse; ordersPerMonthLimit: number | null; orderLimit: OrderLimitStatus; rejections: RejectionStats }, { shopId: string }>({
       query: ({ shopId }) => `/shops/${shopId}/usage`,
       providesTags: (_result, _err, { shopId }) => [{ type: 'Usage', id: shopId }],
+    }),
+    getRejectionWatch: build.query<{ shops: RejectionWatchRow[] }, void>({
+      query: () => '/usage/rejection-watch',
+      providesTags: ['Usage'],
     }),
     reconcileShopUsage: build.mutation<{ usage: ShopUsageResponse; reconciledCount: number }, { shopId: string }>({
       query: ({ shopId }) => ({ url: `/shops/${shopId}/usage/reconcile`, method: 'POST' }),
@@ -376,7 +434,10 @@ export const {
   useSetPlanPricingMutation,
   useGetShopSubscriptionQuery,
   useOverrideShopSubscriptionMutation,
+  useSetLimitOverrideMutation,
+  useClearLimitOverrideMutation,
   useGetShopUsageQuery,
+  useGetRejectionWatchQuery,
   useReconcileShopUsageMutation,
   useGetOrdersByShopQuery,
   useApproveShopNameChangeMutation,

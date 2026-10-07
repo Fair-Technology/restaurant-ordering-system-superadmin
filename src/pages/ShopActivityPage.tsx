@@ -42,6 +42,11 @@ const ACTION_LABELS: Record<string, string> = {
   'shop.cover_image': 'updated cover image',
   'shop.cover_image_remove': 'removed cover image',
   'order.refund': 'refunded an order',
+  'subscription.override': 'changed the plan by hand',
+  'subscription.cancelScheduled': 'scheduled a downgrade to the free plan',
+  'subscription.cancelResumed': 'kept the paid plan',
+  'subscription.limit_override': 'changed a plan limit for this restaurant',
+  'subscription.limit_override_clear': "removed the restaurant's limit override",
 };
 
 const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order'] as const;

@@ -1,6 +1,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetShopUsageQuery, useReconcileShopUsageMutation } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 
 export function ShopUsagePage() {
   const { shopId } = useParams<{ shopId: string }>();
@@ -13,6 +14,7 @@ export function ShopUsagePage() {
     <div className="glass-card p-12 text-center text-sm text-red-500">Failed to load usage.</div>
   );
 
+  const rejections = data.rejections;
   const usage = reconcileData?.usage ?? data.usage;
   const ordersPerMonthLimit = data.ordersPerMonthLimit;
   const limitLabel =
@@ -49,6 +51,11 @@ export function ShopUsagePage() {
           </div>
         </div>
 
+        <p className="text-sm text-gray-700">
+          Warning level: {data.orderLimit.warningLevel}% ·{' '}
+          {data.orderLimit.limitReached ? 'ordering paused' : 'taking orders'}
+        </p>
+
         {reconcileData && (
           <p className="text-green-600 text-sm">
             Reconciled: counted {reconcileData.reconciledCount} accepted orders this month.
@@ -62,6 +69,33 @@ export function ShopUsagePage() {
         >
           {isReconciling ? 'Reconciling…' : 'Reconcile Now'}
         </button>
+      </div>
+
+      <div className="glass-card p-6 space-y-4 mt-4">
+        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">
+          Declines (last {rejections.windowDays} days)
+        </p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Accepted</p>
+            <p className="text-2xl font-semibold text-indigo-900">{rejections.accepted}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Declined by restaurant</p>
+            <p className="text-2xl font-semibold text-indigo-900">{rejections.rejectedByRestaurant}</p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Decline rate</p>
+            <p className="text-2xl font-semibold text-indigo-900">
+              {rejections.rate === null ? '—' : `${Math.round(rejections.rate * 100)}%`}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Declines in last 7 days</p>
+            <p className="text-2xl font-semibold text-indigo-900">{rejections.recentRejections}</p>
+          </div>
+        </div>
+        <RejectionFlagBadges flags={rejections.flags} />
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import {
   Lock,
   ListChecks,
   Scale,
+  AlertTriangle,
 } from 'lucide-react';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -59,6 +60,10 @@ export function Sidebar() {
             Orders
           </span>
         )}
+        <NavLink to="/rejection-watch" className={navLinkClass}>
+          <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+          Decline watch
+        </NavLink>
         <NavLink to="/plans" className={navLinkClass}>
           <CreditCard className="w-4 h-4 flex-shrink-0" />
           Plans
