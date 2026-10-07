@@ -1,6 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useGetShopSubscriptionQuery, useOverrideShopSubscriptionMutation, useGetPlansQuery } from '../services/api';
+import {
+  useGetShopSubscriptionQuery,
+  useOverrideShopSubscriptionMutation,
+  useSetLimitOverrideMutation,
+  useClearLimitOverrideMutation,
+  useGetPlansQuery,
+} from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -10,6 +16,22 @@ const STATUS_COLORS: Record<string, string> = {
   canceled: 'bg-orange-100 text-orange-700',
   expired: 'bg-red-100 text-red-600',
 };
+
+const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'] as const;
+
+// A date-only input means "through the end of that day" in the superadmin's local time.
+function endOfDayIso(date: string): string {
+  return new Date(`${date}T23:59:59`).toISOString();
+}
+
+function serverError(err: unknown, fallback: string): string {
+  const message = (err as { data?: { error?: unknown } } | null)?.data?.error;
+  return typeof message === 'string' ? message : fallback;
+}
+
+function limitLabel(value: number): string {
+  return value === -1 ? 'unlimited' : String(value);
+}
 
 export function ShopSubscriptionPage() {
   const { shopId } = useParams<{ shopId: string }>();
@@ -23,6 +45,14 @@ export function ShopSubscriptionPage() {
   const [expiresAt, setExpiresAt] = useState('');
   const [overrideError, setOverrideError] = useState<string | null>(null);
   const [overrideSuccess, setOverrideSuccess] = useState(false);
+
+  const [setLimitOverride, { isLoading: isSettingLimit }] = useSetLimitOverrideMutation();
+  const [clearLimitOverride, { isLoading: isClearingLimit }] = useClearLimitOverrideMutation();
+  const [limitKey, setLimitKey] = useState<(typeof LIMIT_KEYS)[number]>('ORDERS_PER_MONTH');
+  const [limitValue, setLimitValue] = useState('');
+  const [limitReason, setLimitReason] = useState('');
+  const [limitExpiresAt, setLimitExpiresAt] = useState('');
+  const [limitError, setLimitError] = useState<string | null>(null);
 
   async function handleOverride() {
     setOverrideError(null);
@@ -41,7 +71,7 @@ export function ShopSubscriptionPage() {
         overrideRequest: {
           planId: selectedPlanId,
           overrideReason: reason.trim(),
-          overrideExpiresAt: expiresAt || null,
+          overrideExpiresAt: expiresAt ? endOfDayIso(expiresAt) : null,
         },
       }).unwrap();
       setOverrideSuccess(true);
@@ -52,13 +82,52 @@ export function ShopSubscriptionPage() {
     }
   }
 
+  async function handleSetLimit() {
+    setLimitError(null);
+    const value = Number(limitValue);
+    if (limitValue.trim() === '' || !Number.isInteger(value) || value < -1) {
+      setLimitError('Enter a whole number, -1 or higher');
+      return;
+    }
+    if (!limitReason.trim()) {
+      setLimitError('Reason is required');
+      return;
+    }
+    try {
+      await setLimitOverride({
+        shopId: shopId!,
+        body: {
+          limits: [{ key: limitKey, value }],
+          reason: limitReason.trim(),
+          expiresAt: limitExpiresAt ? endOfDayIso(limitExpiresAt) : null,
+        },
+      }).unwrap();
+      setLimitValue('');
+      setLimitReason('');
+      setLimitExpiresAt('');
+    } catch (err) {
+      setLimitError(serverError(err, 'Failed to set limit override'));
+    }
+  }
+
+  async function handleClearLimit() {
+    setLimitError(null);
+    try {
+      await clearLimitOverride({ shopId: shopId! }).unwrap();
+    } catch (err) {
+      setLimitError(serverError(err, 'Failed to remove limit override'));
+    }
+  }
+
   if (isLoading) return <LoadingScreen title="Loading subscription" subtitle="Fetching current plan and billing status." />;
   if (isError || !data) return (
     <div className="glass-card p-12 text-center text-sm text-red-500">Failed to load subscription.</div>
   );
 
-  const { subscription, plan } = data;
+  const { subscription, plan, entitlements } = data;
   const plans = plansData?.plans ?? [];
+  const inForcePlan = plans.find((p) => p.id === entitlements.planId);
+  const limitOverride = subscription.limitOverride ?? null;
 
   return (
     <div>
@@ -80,6 +149,15 @@ export function ShopSubscriptionPage() {
             <div className="flex justify-between items-center">
               <span className="text-gray-500 text-sm">Plan</span>
               <span className="text-indigo-900 font-medium">{plan?.name ?? subscription.planId}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-gray-500 text-sm">In force</span>
+              <span className="text-indigo-900 font-medium">
+                {inForcePlan?.name ?? entitlements.planId}
+                {entitlements.planOverrideExpired && (
+                  <span className="ml-2 text-xs font-normal text-red-600">(override expired)</span>
+                )}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span className="text-gray-500 text-sm">Status</span>
@@ -186,6 +264,98 @@ export function ShopSubscriptionPage() {
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
             {isOverriding ? 'Applying…' : 'Apply Override'}
+          </button>
+        </div>
+
+        {/* Limit override */}
+        <div className="glass-card p-5 space-y-4 lg:col-span-2">
+          <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limit Override</p>
+
+          {limitOverride ? (
+            <div className="space-y-2 border border-white/30 rounded-lg px-3 py-3">
+              {limitOverride.limits.map((l) => (
+                <div key={l.key} className="flex justify-between">
+                  <span className="text-gray-500 text-sm font-mono">{l.key}</span>
+                  <span className="text-gray-700 text-sm">{limitLabel(l.value)}</span>
+                </div>
+              ))}
+              <div className="flex justify-between">
+                <span className="text-gray-500 text-sm">Reason</span>
+                <span className="text-gray-700 text-sm max-w-64 text-right">{limitOverride.reason}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-500 text-sm">Expires</span>
+                <span className="text-gray-700 text-sm">
+                  {limitOverride.expiresAt ? new Date(limitOverride.expiresAt).toLocaleString() : 'Until removed'}
+                </span>
+              </div>
+              {!entitlements.limitOverrideActive && (
+                <p className="text-xs text-red-600">This override has expired and is no longer applied.</p>
+              )}
+              <button
+                onClick={handleClearLimit}
+                disabled={isClearingLimit}
+                className="border border-red-300 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
+              >
+                {isClearingLimit ? 'Removing…' : 'Remove'}
+              </button>
+            </div>
+          ) : (
+            <p className="text-sm text-gray-500">No limit override. This restaurant follows its plan.</p>
+          )}
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limit</label>
+              <select
+                value={limitKey}
+                onChange={(e) => setLimitKey(e.target.value as (typeof LIMIT_KEYS)[number])}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              >
+                {LIMIT_KEYS.map((k) => (
+                  <option key={k} value={k}>{k}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Value (-1 = unlimited)</label>
+              <input
+                type="number"
+                min={-1}
+                step={1}
+                value={limitValue}
+                onChange={(e) => setLimitValue(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reason (required)</label>
+              <input
+                value={limitReason}
+                onChange={(e) => setLimitReason(e.target.value)}
+                placeholder="e.g. Opening week"
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Expires At (optional)</label>
+              <input
+                type="date"
+                value={limitExpiresAt}
+                onChange={(e) => setLimitExpiresAt(e.target.value)}
+                className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              />
+            </div>
+          </div>
+
+          {limitError && <p className="text-red-500 text-sm">{limitError}</p>}
+
+          <button
+            onClick={handleSetLimit}
+            disabled={isSettingLimit}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            {isSettingLimit ? 'Saving…' : 'Set Limit Override'}
           </button>
         </div>
       </div>
