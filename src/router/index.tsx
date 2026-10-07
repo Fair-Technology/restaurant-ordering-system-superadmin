@@ -4,6 +4,7 @@ import { RequireAuth } from '../auth/RequireAuth';
 import { LoginPage } from '../pages/LoginPage';
 import { DashboardPage } from '../pages/DashboardPage';
 import { ShopsPage } from '../pages/ShopsPage';
+import { RejectionWatchPage } from '../pages/RejectionWatchPage';
 import { ShopActivityPage } from '../pages/ShopActivityPage';
 import { ShopOrdersPage } from '../pages/ShopOrdersPage';
 import { PlansPage } from '../pages/PlansPage';
@@ -35,6 +36,7 @@ export const router = createBrowserRouter([
       { path: 'shops/:shopId/activity', element: <ShopActivityPage /> },
       { path: 'shops/:shopId/subscription', element: <ShopSubscriptionPage /> },
       { path: 'shops/:shopId/usage', element: <ShopUsagePage /> },
+      { path: 'rejection-watch', element: <RejectionWatchPage /> },
       { path: 'plans', element: <PlansPage /> },
       { path: 'plans/:planId', element: <EditPlanPage /> },
       { path: 'plans/:planId/pricing', element: <PlanPricingPage /> },
