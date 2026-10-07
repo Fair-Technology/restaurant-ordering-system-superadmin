@@ -47,6 +47,11 @@ const ACTION_LABELS: Record<string, string> = {
   'subscription.cancelResumed': 'kept the paid plan',
   'subscription.limit_override': 'changed a plan limit for this restaurant',
   'subscription.limit_override_clear': "removed the restaurant's limit override",
+  'subscription.upgrade': 'upgraded the plan',
+  'subscription.change_scheduled': 'scheduled a downgrade',
+  'subscription.change_cancelled': 'cancelled a scheduled downgrade',
+  'subscription.payment_retried': 'paid an overdue invoice',
+  'subscription.override_expired': 'manual plan expired',
 };
 
 const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order'] as const;

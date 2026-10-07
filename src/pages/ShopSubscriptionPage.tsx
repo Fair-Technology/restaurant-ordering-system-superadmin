@@ -44,7 +44,9 @@ export function ShopSubscriptionPage() {
   const [reason, setReason] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
   const [overrideError, setOverrideError] = useState<string | null>(null);
+  // Same as the limit buttons: the card changes only after the refetch lands.
   const [overrideSuccess, setOverrideSuccess] = useState(false);
+  const applyingOverride = isOverriding || (overrideSuccess && isFetching);
 
   const [setLimitOverride, { isLoading: isSettingLimit }] = useSetLimitOverrideMutation();
   const [clearLimitOverride, { isLoading: isClearingLimit }] = useClearLimitOverrideMutation();
@@ -190,6 +192,34 @@ export function ShopSubscriptionPage() {
                 <span className="text-gray-700 text-sm">{new Date(subscription.currentPeriodEnd).toLocaleDateString()}</span>
               </div>
             )}
+            {subscription.scheduledChange && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-sm">Scheduled change</span>
+                <span className="text-gray-700 text-sm">
+                  {plans.find((p) => p.id === subscription.scheduledChange!.planId)?.name ?? subscription.scheduledChange.planId}
+                  {' on '}
+                  {new Date(subscription.scheduledChange.effectiveAt).toLocaleDateString()}
+                </span>
+              </div>
+            )}
+            {subscription.paymentFailedAt && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-sm">Payment failed at</span>
+                <span className="text-yellow-700 text-sm">{new Date(subscription.paymentFailedAt).toLocaleString()}</span>
+              </div>
+            )}
+            {entitlements.graceEndsAt && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-sm">Grace ends</span>
+                <span className="text-gray-700 text-sm">{new Date(entitlements.graceEndsAt).toLocaleString()}</span>
+              </div>
+            )}
+            {entitlements.droppedForNonPayment && (
+              <div className="flex justify-between items-center">
+                <span className="text-gray-500 text-sm">Dropped for non-payment</span>
+                <span className="text-red-600 text-sm">Yes, on the default plan</span>
+              </div>
+            )}
             {subscription.billingCustomerId && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-500 text-sm">Billing Customer</span>
@@ -265,14 +295,14 @@ export function ShopSubscriptionPage() {
           </div>
 
           {overrideError && <p className="text-red-500 text-sm">{overrideError}</p>}
-          {overrideSuccess && <p className="text-green-600 text-sm">Override applied successfully.</p>}
+          {overrideSuccess && !applyingOverride && <p className="text-green-600 text-sm">Override applied successfully.</p>}
 
           <button
             onClick={handleOverride}
-            disabled={isOverriding}
+            disabled={applyingOverride}
             className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
           >
-            {isOverriding ? 'Applying…' : 'Apply Override'}
+            {applyingOverride ? 'Applying…' : 'Apply Override'}
           </button>
         </div>
 
