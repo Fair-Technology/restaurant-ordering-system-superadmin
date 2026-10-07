@@ -39,6 +39,7 @@ const ACTION_LABELS: Record<string, string> = {
   'shop.data_export': 'exported restaurant data',
   'customer.erase': 'anonymised a customer',
   'shop.order_settings_update': 'updated order settings',
+  'shop.busy_mode': 'switched busy mode',
   'shop.cover_image': 'updated cover image',
   'shop.cover_image_remove': 'removed cover image',
   'order.refund': 'refunded an order',
