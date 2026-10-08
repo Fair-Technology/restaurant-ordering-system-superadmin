@@ -193,6 +193,7 @@ export interface OrderDto {
   paymentStatus: string;
   items: OrderItemDto[];
   subtotalCents: number;
+  totalCents?: number;
   currency: string;
   customerName?: string;
   customerEmail?: string;
