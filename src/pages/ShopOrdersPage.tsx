@@ -117,7 +117,7 @@ export function ShopOrdersPage() {
                       {order.customerName ?? '—'}
                     </td>
                     <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">
-                      {(order.subtotalCents / 100).toFixed(2)} {order.currency.toUpperCase()}
+                      {((order.totalCents ?? order.subtotalCents) / 100).toFixed(2)} {order.currency.toUpperCase()}
                     </td>
                     <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
                       {new Date(order.createdAt).toLocaleDateString('en-GB', {
