@@ -5,6 +5,7 @@ import { LoadingScreen } from '../components/ui/LoadingScreen';
 const PERMISSION_ROWS: Array<{ key: string; label: string }> = [
   { key: 'view_orders', label: 'View orders' },
   { key: 'refund_orders', label: 'Refund orders' },
+  { key: 'view_reports', label: 'View reports and takings' },
   { key: 'manage_menu', label: 'Edit menu and prices' },
   { key: 'manage_shop', label: 'Restaurant settings' },
   { key: 'manage_staff', label: 'Manage staff logins' },
