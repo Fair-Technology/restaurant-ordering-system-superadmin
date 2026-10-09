@@ -46,6 +46,8 @@ const ACTION_LABELS: Record<string, string> = {
   'promotion.code_create': 'created a discount code',
   'promotion.code_update': 'switched a discount code on or off',
   'promotion.loyalty_update': 'changed the loyalty vouchers',
+  'combo.create': 'created a combo',
+  'combo.update': 'changed a combo',
   'subscription.override': 'changed the plan by hand',
   'subscription.cancelScheduled': 'scheduled a downgrade to the free plan',
   'subscription.cancelResumed': 'kept the paid plan',
