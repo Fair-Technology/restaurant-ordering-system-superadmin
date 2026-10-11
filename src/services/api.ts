@@ -26,6 +26,11 @@ export interface ShopResponse {
   createdAt: string;
   updatedAt: string;
   pendingNameChange?: PendingNameChange | null;
+  isPaused?: boolean;
+  ordersPaused?: boolean;
+  isOffline?: boolean;
+  offlineBySuperadmin?: boolean;
+  offlineBySuperadminReason?: string | null;
 }
 
 export interface ShopsListResponse {
@@ -401,6 +406,17 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Shops'],
     }),
+    setShopSuperadminOffline: build.mutation<
+      { offlineBySuperadmin: boolean; offlineBySuperadminReason?: string | null },
+      { shopId: string; offline: boolean; reason?: string }
+    >({
+      query: ({ shopId, offline, reason }) => ({
+        url: `/shops/${shopId}/superadmin-offline`,
+        method: 'POST',
+        body: offline ? { offline, ...(reason ? { reason } : {}) } : { offline },
+      }),
+      invalidatesTags: ['Shops'],
+    }),
     // Role permissions
     getRolePermissions: build.query<RolePermissionsResponse, void>({
       query: () => '/platform/role-permissions',
@@ -463,6 +479,7 @@ export const {
   useApproveShopNameChangeMutation,
   useRejectShopNameChangeMutation,
   useRestoreShopMutation,
+  useSetShopSuperadminOfflineMutation,
   useGetRolePermissionsQuery,
   useUpdateRolePermissionsMutation,
   useGetReferenceListsQuery,
