@@ -1,13 +1,20 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useGetShopsQuery, useRestoreShopMutation, type ShopResponse } from '../services/api';
+import { useGetShopsQuery, useRestoreShopMutation, useSetShopSuperadminOfflineMutation, type ShopResponse } from '../services/api';
 import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-react';
+import { getShopStatus, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const PAGE_SIZE = 20;
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
+const STATUS_STYLE: Record<ShopStatusKind, string> = {
+  online: 'bg-green-100 text-green-700',
+  'offline-owner': 'bg-amber-100 text-amber-700',
+  'offline-platform': 'bg-red-100 text-red-600',
+};
 
 export function ShopsPage() {
   const { data: shops, isLoading, isError } = useGetShopsQuery();
@@ -17,6 +24,12 @@ export function ShopsPage() {
   const [restoreTarget, setRestoreTarget] = useState<ShopResponse | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreShop, { isLoading: isRestoring }] = useRestoreShopMutation();
+
+  const [offlineTarget, setOfflineTarget] = useState<ShopResponse | null>(null);
+  const [offlineReason, setOfflineReason] = useState('');
+  const [offlineError, setOfflineError] = useState<string | null>(null);
+  const [setSuperadminOffline, { isLoading: isSettingOffline }] =
+    useSetShopSuperadminOfflineMutation();
 
   const filtered = (shops?.shops ?? []).filter(
     (s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(search.toLowerCase()),
@@ -36,6 +49,34 @@ export function ShopsPage() {
       setRestoreError(null);
     } catch {
       setRestoreError('Could not restore this shop. Please try again.');
+    }
+  };
+
+  const closeOffline = () => {
+    if (isSettingOffline) return;
+    setOfflineTarget(null);
+    setOfflineReason('');
+    setOfflineError(null);
+  };
+
+  const confirmOffline = async () => {
+    if (!offlineTarget) return;
+    const goOffline = !offlineTarget.offlineBySuperadmin;
+    try {
+      await setSuperadminOffline({
+        shopId: offlineTarget.id,
+        offline: goOffline,
+        reason: goOffline ? offlineReason.trim() : undefined,
+      }).unwrap();
+      setOfflineTarget(null);
+      setOfflineReason('');
+      setOfflineError(null);
+    } catch {
+      setOfflineError(
+        goOffline
+          ? 'Could not take this shop offline. Please try again.'
+          : 'Could not bring this shop back online. Please try again.',
+      );
     }
   };
 
@@ -107,6 +148,9 @@ export function ShopsPage() {
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Shop
                   </th>
+                  <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Status
+                  </th>
                   <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden sm:table-cell">
                     Slug
                   </th>
@@ -135,6 +179,32 @@ export function ShopsPage() {
                           </span>
                         )}
                       </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {(() => {
+                        const status = getShopStatus(shop);
+                        return (
+                          <div className="flex flex-col items-start gap-1">
+                            <div className="flex items-center gap-1 flex-wrap">
+                              <span
+                                className={`text-xs px-1.5 py-0.5 rounded ${STATUS_STYLE[status.kind]}`}
+                              >
+                                {status.label}
+                              </span>
+                              {status.ordersPaused && (
+                                <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                                  Orders paused
+                                </span>
+                              )}
+                            </div>
+                            {shop.offlineBySuperadmin && shop.offlineBySuperadminReason && (
+                              <span className="text-xs text-gray-500 max-w-[16rem] break-words">
+                                Reason: {shop.offlineBySuperadminReason}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
                     <td className="px-6 py-4 text-gray-500 hidden sm:table-cell">{shop.slug}</td>
                     <td className="px-6 py-4 text-gray-500 hidden md:table-cell">
@@ -165,6 +235,14 @@ export function ShopsPage() {
                           Activity
                           <ArrowRight className="w-3 h-3" />
                         </Link>
+                        {!shop.isDeleted && (
+                          <button
+                            onClick={() => setOfflineTarget(shop)}
+                            className={`${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
+                          >
+                            {shop.offlineBySuperadmin ? 'Bring back online' : 'Take offline'}
+                          </button>
+                        )}
                         {shop.isDeleted && (
                           <button
                             onClick={() => setRestoreTarget(shop)}
@@ -248,6 +326,71 @@ export function ShopsPage() {
           </div>
         </div>
       )}
+      {offlineTarget && (() => {
+        const goOffline = !offlineTarget.offlineBySuperadmin;
+        return (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            onClick={closeOffline}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="offline-title"
+              className="glass-card bg-white p-6 w-full max-w-md"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 id="offline-title" className="text-lg font-semibold text-indigo-900 mb-2">
+                {goOffline ? `Take ${offlineTarget.name} offline?` : `Bring ${offlineTarget.name} back online?`}
+              </h2>
+              {goOffline ? (
+                <>
+                  <p className="text-sm text-gray-600 mb-2">
+                    The storefront shows no menu and diners see a popup saying the shop is offline.
+                    The owner cannot bring it back online; only you can.
+                  </p>
+                  <label className="block text-sm text-gray-600 mb-4">
+                    Internal reason (optional)
+                    <textarea
+                      value={offlineReason}
+                      onChange={(e) => setOfflineReason(e.target.value)}
+                      maxLength={SUPERADMIN_REASON_MAX}
+                      rows={3}
+                      className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                    />
+                  </label>
+                </>
+              ) : (
+                <p className="text-sm text-gray-600 mb-4">
+                  This removes the platform offline lock only. If the owner has also switched the
+                  shop offline themselves, it stays offline until they switch it back on.
+                </p>
+              )}
+              {offlineError && <p className="text-sm text-red-500 mb-4">{offlineError}</p>}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={closeOffline}
+                  disabled={isSettingOffline}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmOffline}
+                  disabled={isSettingOffline}
+                  className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                >
+                  {isSettingOffline
+                    ? 'Saving...'
+                    : goOffline
+                      ? 'Take offline'
+                      : 'Bring back online'}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
