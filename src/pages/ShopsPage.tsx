@@ -1,19 +1,43 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useGetShopsQuery } from '../services/api';
+import { useGetShopsQuery, useRestoreShopMutation, type ShopResponse } from '../services/api';
 import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const PAGE_SIZE = 20;
 
+const formatDate = (iso: string) =>
+  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+
 export function ShopsPage() {
   const { data: shops, isLoading, isError } = useGetShopsQuery();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [showDeleted, setShowDeleted] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState<ShopResponse | null>(null);
+  const [restoreError, setRestoreError] = useState<string | null>(null);
+  const [restoreShop, { isLoading: isRestoring }] = useRestoreShopMutation();
 
-  const filtered = (shops?.shops ?? []).filter((s) =>
-    s.name.toLowerCase().includes(search.toLowerCase()),
+  const filtered = (shops?.shops ?? []).filter(
+    (s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(search.toLowerCase()),
   );
+
+  const closeRestore = () => {
+    if (isRestoring) return;
+    setRestoreTarget(null);
+    setRestoreError(null);
+  };
+
+  const confirmRestore = async () => {
+    if (!restoreTarget) return;
+    try {
+      await restoreShop({ shopId: restoreTarget.id }).unwrap();
+      setRestoreTarget(null);
+      setRestoreError(null);
+    } catch {
+      setRestoreError('Could not restore this shop. Please try again.');
+    }
+  };
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
@@ -36,6 +60,19 @@ export function ShopsPage() {
             {shops ? `${shops.total} shops total` : ''}
           </p>
         </div>
+        <div className="flex items-center gap-4 flex-wrap">
+        <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={showDeleted}
+            onChange={(e) => {
+              setShowDeleted(e.target.checked);
+              setPage(1);
+            }}
+            className="rounded border-gray-300"
+          />
+          Show deleted
+        </label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
@@ -45,6 +82,7 @@ export function ShopsPage() {
             onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9 pr-4 py-2 text-sm border border-white/40 rounded-lg bg-white/60 backdrop-blur focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"
           />
+        </div>
         </div>
       </div>
 
@@ -83,14 +121,17 @@ export function ShopsPage() {
               </thead>
               <tbody className="divide-y divide-white/20">
                 {pageItems.map((shop) => (
-                  <tr key={shop.id} className="hover:bg-white/20 transition-colors">
+                  <tr
+                    key={shop.id}
+                    className={`hover:bg-white/20 transition-colors ${shop.isDeleted ? 'opacity-60' : ''}`}
+                  >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         <Store className="w-4 h-4 text-indigo-400 flex-shrink-0" />
                         <span className="font-medium text-indigo-900">{shop.name}</span>
                         {shop.isDeleted && (
                           <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
-                            deleted
+                            {shop.deletedAt ? `Deleted ${formatDate(shop.deletedAt)}` : 'Deleted'}
                           </span>
                         )}
                       </div>
@@ -100,11 +141,7 @@ export function ShopsPage() {
                       {shop.currency ?? '—'}
                     </td>
                     <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
-                      {new Date(shop.createdAt).toLocaleDateString('en-GB', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+                      {formatDate(shop.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="inline-flex items-center gap-3">
@@ -128,6 +165,14 @@ export function ShopsPage() {
                           Activity
                           <ArrowRight className="w-3 h-3" />
                         </Link>
+                        {shop.isDeleted && (
+                          <button
+                            onClick={() => setRestoreTarget(shop)}
+                            className="text-green-700 hover:text-green-900 text-xs font-medium transition-colors"
+                          >
+                            Restore
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -160,6 +205,48 @@ export function ShopsPage() {
             </div>
           )}
         </>
+      )}
+
+      {restoreTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={closeRestore}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="restore-title"
+            className="glass-card bg-white p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="restore-title" className="text-lg font-semibold text-indigo-900 mb-2">
+              Restore {restoreTarget.name}?
+            </h2>
+            <p className="text-sm text-gray-600 mb-2">
+              The shop becomes visible again to its owner and to diners.
+            </p>
+            <p className="text-sm text-gray-600 mb-4">
+              Billing is not restarted. The owner must subscribe again.
+            </p>
+            {restoreError && <p className="text-sm text-red-500 mb-4">{restoreError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeRestore}
+                disabled={isRestoring}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmRestore}
+                disabled={isRestoring}
+                className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {isRestoring ? 'Restoring...' : 'Restore shop'}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

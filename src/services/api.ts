@@ -21,6 +21,7 @@ export interface ShopResponse {
   name: string;
   slug: string;
   isDeleted: boolean;
+  deletedAt?: string | null;
   currency?: string;
   createdAt: string;
   updatedAt: string;
@@ -393,6 +394,13 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Shops'],
     }),
+    restoreShop: build.mutation<unknown, { shopId: string }>({
+      query: ({ shopId }) => ({
+        url: `/shops/${shopId}/restore`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Shops'],
+    }),
     // Role permissions
     getRolePermissions: build.query<RolePermissionsResponse, void>({
       query: () => '/platform/role-permissions',
@@ -454,6 +462,7 @@ export const {
   useGetOrdersByShopQuery,
   useApproveShopNameChangeMutation,
   useRejectShopNameChangeMutation,
+  useRestoreShopMutation,
   useGetRolePermissionsQuery,
   useUpdateRolePermissionsMutation,
   useGetReferenceListsQuery,
