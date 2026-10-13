@@ -348,6 +348,7 @@ export function ShopsPage() {
                   <p className="text-sm text-gray-600 mb-2">
                     The storefront shows no menu and diners see a popup saying the shop is offline.
                     The owner cannot bring it back online; only you can.
+                    Orders still waiting for the restaurant&apos;s answer are declined and the diners&apos; card reservations released. Accepted orders are not touched.
                   </p>
                   <label className="block text-sm text-gray-600 mb-4">
                     Internal reason (optional)
