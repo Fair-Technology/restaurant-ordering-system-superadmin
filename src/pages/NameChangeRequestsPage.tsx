@@ -4,6 +4,7 @@ import {
   useApproveShopNameChangeMutation,
   useRejectShopNameChangeMutation,
 } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import { FileEdit } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
@@ -21,8 +22,8 @@ export function NameChangeRequestsPage() {
     setActionError(null);
     try {
       await approveShopNameChange({ shopId }).unwrap();
-    } catch (err: any) {
-      setActionError(err?.data?.error ?? 'Failed to approve name change');
+    } catch (err) {
+      setActionError(apiErrorMessage(err, 'Failed to approve name change'));
     } finally {
       setProcessingId(null);
     }
@@ -33,8 +34,8 @@ export function NameChangeRequestsPage() {
     setActionError(null);
     try {
       await rejectShopNameChange({ shopId }).unwrap();
-    } catch (err: any) {
-      setActionError(err?.data?.error ?? 'Failed to reject name change');
+    } catch (err) {
+      setActionError(apiErrorMessage(err, 'Failed to reject name change'));
     } finally {
       setProcessingId(null);
     }

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetPlanPricingQuery, useGetPlanQuery, useSetPlanPricingMutation } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import type { PlanPricingResponse } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
@@ -28,15 +29,17 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
 
   const [setPricing] = useSetPlanPricingMutation();
 
-  // Sync if existing data loads after mount
-  useEffect(() => {
+  // Sync if existing data loads after mount (adjusted during render, not in an effect).
+  const [syncedExisting, setSyncedExisting] = useState(existing);
+  if (existing !== syncedExisting) {
+    setSyncedExisting(existing);
     if (existing) {
       setMonthly(formatCents(existing.monthlyAmountCents));
       setYearly(formatCents(existing.yearlyAmountCents));
       setMonthlyPriceId(existing.billingPriceIdMonthly ?? '');
       setYearlyPriceId(existing.billingPriceIdYearly ?? '');
     }
-  }, [existing]);
+  }
 
   async function handleSave() {
     const monthlyVal = Math.round(Number(monthly) * 100);
@@ -62,9 +65,9 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
       setStatus('saved');
       setExpanded(false);
       setTimeout(() => setStatus('idle'), 2000);
-    } catch (err: any) {
+    } catch (err) {
       setStatus('error');
-      setErrorMsg(err?.data?.error ?? 'Failed to save');
+      setErrorMsg(apiErrorMessage(err, 'Failed to save'));
     }
   }
 

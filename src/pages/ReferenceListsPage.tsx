@@ -1,5 +1,6 @@
 import { type ReactNode, useState } from 'react';
 import { useGetReferenceListsQuery, useUpdateReferenceListsMutation } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import type {
   FulfilmentModeKey,
   ReferenceEntry,
@@ -24,14 +25,6 @@ function toUpdateBody(data: ReferenceListsResponse): ReferenceListsUpdateBody {
     defaultTaxClassId: data.defaultTaxClassId,
     taxRates: data.taxRates,
   };
-}
-
-function errorMessage(err: unknown, fallback: string): string {
-  if (err && typeof err === 'object' && 'data' in err) {
-    const data = (err as { data?: { error?: string } }).data;
-    if (data?.error) return data.error;
-  }
-  return fallback;
 }
 
 export function ReferenceListsPage() {
@@ -126,7 +119,7 @@ function ReferenceListsEditor({
       await updateReferenceLists({ countryCode, body: draft }).unwrap();
       setSaved(true);
     } catch (err) {
-      setError(errorMessage(err, 'Failed to save lists'));
+      setError(apiErrorMessage(err, 'Failed to save lists'));
     }
   }
 

@@ -7,6 +7,7 @@ import {
   useClearLimitOverrideMutation,
   useGetPlansQuery,
 } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -22,11 +23,6 @@ const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'] as const;
 // A date-only input means "through the end of that day" in the superadmin's local time.
 function endOfDayIso(date: string): string {
   return new Date(`${date}T23:59:59`).toISOString();
-}
-
-function serverError(err: unknown, fallback: string): string {
-  const message = (err as { data?: { error?: unknown } } | null)?.data?.error;
-  return typeof message === 'string' ? message : fallback;
 }
 
 function limitLabel(value: number): string {
@@ -84,8 +80,8 @@ export function ShopSubscriptionPage() {
       setOverrideSuccess(true);
       setReason('');
       setExpiresAt('');
-    } catch (err: any) {
-      setOverrideError(err?.data?.error ?? 'Failed to apply override');
+    } catch (err) {
+      setOverrideError(apiErrorMessage(err, 'Failed to apply override'));
     }
   }
 
@@ -115,7 +111,7 @@ export function ShopSubscriptionPage() {
       setLimitReason('');
       setLimitExpiresAt('');
     } catch (err) {
-      setLimitError(serverError(err, 'Failed to set limit override'));
+      setLimitError(apiErrorMessage(err, 'Failed to set limit override'));
     }
   }
 
@@ -126,7 +122,7 @@ export function ShopSubscriptionPage() {
       await clearLimitOverride({ shopId: shopId! }).unwrap();
       setLimitDone('clear');
     } catch (err) {
-      setLimitError(serverError(err, 'Failed to remove limit override'));
+      setLimitError(apiErrorMessage(err, 'Failed to remove limit override'));
     }
   }
 
