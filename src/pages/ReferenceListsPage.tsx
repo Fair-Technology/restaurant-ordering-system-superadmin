@@ -334,7 +334,7 @@ function TaxRatesSection({
     <div className="glass-card overflow-hidden">
       <div className="px-6 py-4 border-b border-white/30">
         <h2 className="text-sm font-semibold text-indigo-900">Tax rates</h2>
-        <p className="text-xs text-gray-500 mt-0.5">Existing rows can&rsquo;t be edited — add a new row instead.</p>
+        <p className="text-xs text-gray-500 mt-0.5">Existing rows can&rsquo;t be edited — add a new row instead. Every active class needs a rate in effect now for all three modes.</p>
       </div>
       <table className="w-full text-sm">
         <thead>
