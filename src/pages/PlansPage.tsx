@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetPlansQuery, useCreatePlanMutation } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import type { PlanResponse } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
@@ -26,8 +27,8 @@ export function PlansPage() {
       setShowCreate(false);
       setNewName('');
       setNewKey('');
-    } catch (err: any) {
-      setCreateError(err?.data?.error ?? 'Failed to create plan');
+    } catch (err) {
+      setCreateError(apiErrorMessage(err, 'Failed to create plan'));
     }
   }
 

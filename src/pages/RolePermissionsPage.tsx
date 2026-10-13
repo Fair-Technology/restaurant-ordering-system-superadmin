@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useGetRolePermissionsQuery, useUpdateRolePermissionsMutation } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const PERMISSION_ROWS: Array<{ key: string; label: string }> = [
@@ -22,12 +23,15 @@ export function RolePermissionsPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
+  // Copy each newly loaded set into the form (adjusted during render, not in an effect).
+  const [syncedData, setSyncedData] = useState<typeof data>(undefined);
+  if (data !== syncedData) {
+    setSyncedData(data);
     if (data) {
       setManager(data.manager);
       setStaff(data.staff);
     }
-  }, [data]);
+  }
 
   function toggle(role: 'manager' | 'staff', key: string) {
     setSaved(false);
@@ -41,8 +45,8 @@ export function RolePermissionsPage() {
     try {
       await updateRolePermissions({ manager, staff }).unwrap();
       setSaved(true);
-    } catch (err: any) {
-      setError(err?.data?.error ?? 'Failed to save role permissions');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Failed to save role permissions'));
     }
   }
 

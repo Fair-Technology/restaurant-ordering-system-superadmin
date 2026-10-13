@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetPlanQuery, useUpdatePlanMutation } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import type { PlanLimitResponse } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
@@ -19,14 +20,17 @@ export function EditPlanPage() {
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
+  // Copy each newly loaded plan into the form (adjusted during render, not in an effect).
+  const [syncedData, setSyncedData] = useState<typeof data>(undefined);
+  if (data !== syncedData) {
+    setSyncedData(data);
     if (data?.plan) {
       setName(data.plan.name);
       setIsVisible(data.plan.isVisible);
       setSortOrder(data.plan.sortOrder);
       setLimits(data.plan.limits);
     }
-  }, [data]);
+  }
 
   function addLimit() {
     setLimits((prev) => [...prev, { key: LIMIT_KEYS[0], value: 0 }]);
@@ -53,8 +57,8 @@ export function EditPlanPage() {
         updatePlanRequest: { name, isVisible, sortOrder, limits },
       }).unwrap();
       setSaved(true);
-    } catch (err: any) {
-      setError(err?.data?.error ?? 'Failed to save plan');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Failed to save plan'));
     }
   }
 
