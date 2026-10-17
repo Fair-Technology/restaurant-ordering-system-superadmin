@@ -1,6 +1,18 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useGetShopsQuery, useRestoreShopMutation, useSetShopSuperadminOfflineMutation, type ShopResponse } from '../services/api';
+import {
+  useGetShopsQuery,
+  useRestoreShopMutation,
+  useSetMissedOrdersPauseLimitMutation,
+  useSetShopSuperadminOfflineMutation,
+  type ShopResponse,
+} from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
+import {
+  MISSED_ORDERS_LIMIT_OPTIONS,
+  missedOrdersLimitLabel,
+  missedOrdersLimitOf,
+} from './missed-orders';
 import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getShopStatus, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
@@ -30,6 +42,12 @@ export function ShopsPage() {
   const [offlineError, setOfflineError] = useState<string | null>(null);
   const [setSuperadminOffline, { isLoading: isSettingOffline }] =
     useSetShopSuperadminOfflineMutation();
+
+  const [limitTarget, setLimitTarget] = useState<ShopResponse | null>(null);
+  const [limitValue, setLimitValue] = useState(3);
+  const [limitError, setLimitError] = useState<string | null>(null);
+  const [setMissedOrdersPauseLimit, { isLoading: isSavingLimit }] =
+    useSetMissedOrdersPauseLimitMutation();
 
   const filtered = (shops?.shops ?? []).filter(
     (s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(search.toLowerCase()),
@@ -77,6 +95,29 @@ export function ShopsPage() {
           ? 'Could not take this shop offline. Please try again.'
           : 'Could not bring this shop back online. Please try again.',
       );
+    }
+  };
+
+  const openLimit = (shop: ShopResponse) => {
+    setLimitValue(missedOrdersLimitOf(shop));
+    setLimitError(null);
+    setLimitTarget(shop);
+  };
+
+  const closeLimit = () => {
+    if (isSavingLimit) return;
+    setLimitTarget(null);
+    setLimitError(null);
+  };
+
+  const confirmLimit = async () => {
+    if (!limitTarget) return;
+    try {
+      await setMissedOrdersPauseLimit({ shopId: limitTarget.id, limit: limitValue }).unwrap();
+      setLimitTarget(null);
+      setLimitError(null);
+    } catch (err) {
+      setLimitError(apiErrorMessage(err, 'Could not save. Please try again.'));
     }
   };
 
@@ -237,6 +278,14 @@ export function ShopsPage() {
                         </Link>
                         {!shop.isDeleted && (
                           <button
+                            onClick={() => openLimit(shop)}
+                            className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          >
+                            {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
+                          </button>
+                        )}
+                        {!shop.isDeleted && (
+                          <button
                             onClick={() => setOfflineTarget(shop)}
                             className={`${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
                           >
@@ -321,6 +370,59 @@ export function ShopsPage() {
                 className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
               >
                 {isRestoring ? 'Restoring...' : 'Restore shop'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {limitTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={closeLimit}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="limit-title"
+            className="glass-card bg-white p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="limit-title" className="text-lg font-semibold text-indigo-900 mb-2">
+              Auto-pause for {limitTarget.name}
+            </h2>
+            <p className="text-sm text-gray-600 mb-4">
+              Pause the shop automatically after this many orders in a row that nobody accepted in
+              time. The pause stays until the restaurant switches ordering back on. The owner is
+              emailed.
+            </p>
+            <select
+              value={limitValue}
+              onChange={(e) => setLimitValue(Number(e.target.value))}
+              disabled={isSavingLimit}
+              aria-label="Missed orders before auto-pause"
+              className="mb-4 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+            >
+              {MISSED_ORDERS_LIMIT_OPTIONS.map((n) => (
+                <option key={n} value={n}>
+                  {n === 0 ? 'Off' : n}
+                </option>
+              ))}
+            </select>
+            {limitError && <p className="text-sm text-red-500 mb-4">{limitError}</p>}
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeLimit}
+                disabled={isSavingLimit}
+                className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLimit}
+                disabled={isSavingLimit}
+                className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                {isSavingLimit ? 'Saving...' : 'Save'}
               </button>
             </div>
           </div>
