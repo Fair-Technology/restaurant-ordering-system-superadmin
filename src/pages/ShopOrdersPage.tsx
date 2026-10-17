@@ -13,6 +13,7 @@ const STATUS_LABELS: Record<string, string> = {
   COMPLETED: 'Completed',
   REJECTED: 'Rejected',
   CANCELLED: 'Cancelled',
+  REFUNDED: 'Refunded',
 };
 
 function statusBadgeClass(displayState: string) {
