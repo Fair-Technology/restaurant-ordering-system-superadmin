@@ -12,6 +12,11 @@ describe('missedOrdersLimitOf', () => {
   it('keeps 0 (off)', () => {
     expect(missedOrdersLimitOf({ missedOrdersPauseLimit: 0 })).toBe(0);
   });
+  it('falls back to 3 for a non-integer value', () => {
+    expect(missedOrdersLimitOf({ missedOrdersPauseLimit: 2.5 })).toBe(3);
+    expect(missedOrdersLimitOf({ missedOrdersPauseLimit: Number.NaN })).toBe(3);
+    expect(missedOrdersLimitOf({ missedOrdersPauseLimit: '5' as unknown as number })).toBe(3);
+  });
   it('keeps a set value', () => {
     expect(missedOrdersLimitOf({ missedOrdersPauseLimit: 7 })).toBe(7);
   });
