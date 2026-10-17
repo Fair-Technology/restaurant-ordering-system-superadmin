@@ -31,6 +31,8 @@ export interface ShopResponse {
   isOffline?: boolean;
   offlineBySuperadmin?: boolean;
   offlineBySuperadminReason?: string | null;
+  /** Auto-pause after N missed orders: 0 = off, 1-10; absent = default 3. */
+  missedOrdersPauseLimit?: number;
 }
 
 export interface ShopsListResponse {
@@ -417,6 +419,17 @@ export const api = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Shops'],
     }),
+    setMissedOrdersPauseLimit: build.mutation<
+      { missedOrdersPauseLimit: number },
+      { shopId: string; limit: number }
+    >({
+      query: ({ shopId, limit }) => ({
+        url: `/shops/${shopId}/missed-orders-pause`,
+        method: 'PUT',
+        body: { limit },
+      }),
+      invalidatesTags: ['Shops'],
+    }),
     // Role permissions
     getRolePermissions: build.query<RolePermissionsResponse, void>({
       query: () => '/platform/role-permissions',
@@ -480,6 +493,7 @@ export const {
   useRejectShopNameChangeMutation,
   useRestoreShopMutation,
   useSetShopSuperadminOfflineMutation,
+  useSetMissedOrdersPauseLimitMutation,
   useGetRolePermissionsQuery,
   useUpdateRolePermissionsMutation,
   useGetReferenceListsQuery,
