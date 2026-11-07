@@ -57,7 +57,13 @@ jobs:
       - run: npm ci
       - name: Build
         env:
+          # Every VITE_* the app reads must be mapped here: Vite inlines them at
+          # build time, and a variable that is not passed simply becomes undefined
+          # (which silently falls back to whatever the code defaults to).
           VITE_MSAL_CLIENT_ID: ${{ vars.VITE_MSAL_CLIENT_ID }}
+          # Full authority URL, e.g. https://login.microsoftonline.com/<tenant-id>
+          # (workforce tenant). When empty the app falls back to the CIAM tenant form.
+          VITE_MSAL_AUTHORITY: ${{ vars.VITE_MSAL_AUTHORITY }}
           VITE_MSAL_TENANT_ID: ${{ vars.VITE_MSAL_TENANT_ID }}
           VITE_MSAL_TENANT_NAME: ${{ vars.VITE_MSAL_TENANT_NAME }}
           VITE_MSAL_API_SCOPE: ${{ vars.VITE_MSAL_API_SCOPE }}
