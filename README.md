@@ -1,4 +1,76 @@
-# React + TypeScript + Vite
+# rs-superadmin
+
+The platform-staff console of the restaurant ordering system (React + TypeScript + Vite).
+
+## Running locally
+
+### 1. Start the backend first
+
+The console only renders data it gets from the API, so start `rs-backend` before the app:
+
+```bash
+cd ../rs-backend
+npm start                 # = npm run build && func start → http://localhost:7071/api
+```
+
+- Needs Azure Functions Core Tools v4 (`func`) and the backend's own `local.settings.json`. That file holds live dev credentials and isn't committed; ask for it.
+- The local backend talks to the **shared dev** Cosmos DB and storage (no Azurite). Its three timers are switched off locally (`AzureWebJobs.<timer>.Disabled = true`); the deployed dev app runs them.
+- Its CORS allow-list is exactly `http://localhost:5173`–`http://localhost:5176`. An app served from any other origin (including `127.0.0.1`) will have its API calls blocked.
+
+Quick check: `curl -s -o /dev/null -w '%{http_code}\n' http://localhost:7071/api/shops/public` → `200`.
+
+### 2. Configure `.env.local`
+
+Create `.env.local` in this folder (it's git-ignored). The app reads:
+
+| Variable | Required | Value |
+|---|---|---|
+| `VITE_API_BASE_URL` | yes | `http://localhost:7071/api`. **Must end in `/api`**: `src/services/baseApi.ts` uses it as-is (unlike the storefront, nothing appends `/api`) |
+| `VITE_MSAL_CLIENT_ID` | yes | client id of the **`restaurant-ordering-superadmin-workforce`** app registration |
+| `VITE_MSAL_AUTHORITY` | yes, for the workforce tenant | `https://login.microsoftonline.com/<workforce-tenant-id>` |
+| `VITE_MSAL_API_SCOPE` | yes | the backend API scope the console requests tokens for |
+| `VITE_MSAL_TENANT_NAME`, `VITE_MSAL_TENANT_ID` | only if `VITE_MSAL_AUTHORITY` is unset | fallback CIAM authority `https://<name>.ciamlogin.com/<id>` (`src/auth/msalConfig.ts`) |
+
+Platform operators sign in through the workforce tenant, so in practice set `VITE_MSAL_AUTHORITY` and leave the two `TENANT_*` values out.
+
+### 3. Run on port 5174
+
+```bash
+npm install
+npm run dev -- --port 5174 --strictPort
+```
+
+Open **http://localhost:5174**. Use `localhost`, not `127.0.0.1`: Vite binds IPv6 (`::1`) only, so `http://127.0.0.1:5174` doesn't answer even while the app is running.
+
+The port matters:
+- `vite.config.ts` doesn't pin one, so a bare `npm run dev` takes 5173 or whatever is free.
+- `--strictPort` makes Vite fail loudly instead of drifting to another port.
+- MSAL redirects back to `window.location.origin`, and the app registration's SPA redirect URIs include `http://localhost:5174` (also 5173 and 5175), so sign-in only works from those origins.
+
+The other apps use their own fixed ports:
+
+| App | Port |
+|---|---|
+| rs-backend (Functions host) | 7071 |
+| rs-superadmin (this repo) | 5174 |
+| rs-admin | 5175 |
+| rs-storefront | 5176 |
+
+### 4. Checks
+
+```bash
+npm run typecheck     # tsc -b
+npm test              # vitest run
+npm run build         # tsc -b && vite build
+```
+
+### API client
+
+`src/services/api.ts` and `src/services/baseApi.ts` hold the RTK Query client. There is no codegen script in this repo yet; the endpoints are maintained by hand against the backend's published spec (`http://localhost:7071/api/swagger.json`, or the dev API's `/api/swagger.json`).
+
+---
+
+*The rest of this file is the original Vite template text.*
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
