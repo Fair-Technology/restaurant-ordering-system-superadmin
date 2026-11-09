@@ -4,6 +4,7 @@ import { Navigate } from 'react-router-dom';
 import { useGetMeQuery } from '../services/api';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { decideAccess } from './access';
 
 interface Props {
   children: React.ReactNode;
@@ -19,23 +20,19 @@ export function RequireAuth({ children }: Props) {
     skip: inProgress !== InteractionStatus.None || !isAuthenticated,
   });
 
-  // MSAL is still processing the redirect — don't make a routing decision yet
-  if (inProgress !== InteractionStatus.None) {
-    return <LoadingScreen title="Signing you in" subtitle="Completing authentication." fullScreen />;
+  switch (
+    decideAccess({ msalSettled: inProgress === InteractionStatus.None, isAuthenticated, profileLoading, profile })
+  ) {
+    // MSAL is still processing the redirect — don't make a routing decision yet
+    case 'signing-in':
+      return <LoadingScreen title="Signing you in" subtitle="Completing authentication." fullScreen />;
+    case 'login':
+      return <Navigate to="/login" replace />;
+    case 'loading-profile':
+      return <LoadingScreen title="Loading superadmin" subtitle="Checking your access and profile." fullScreen />;
+    case 'denied':
+      return <AccessDeniedPage />;
+    case 'granted':
+      return <>{children}</>;
   }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
-  }
-
-  // Waiting for profile to load
-  if (profileLoading || !profile) {
-    return <LoadingScreen title="Loading superadmin" subtitle="Checking your access and profile." fullScreen />;
-  }
-
-  if (profile.systemRole !== 'superadmin') {
-    return <AccessDeniedPage />;
-  }
-
-  return <>{children}</>;
 }

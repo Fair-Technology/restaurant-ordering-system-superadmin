@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useGetOrdersByShopQuery } from '../services/api';
 import { ChevronLeft, ChevronLeft as Prev, ChevronRight as Next } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { formatOrderTotal } from '../utils/money';
 
 const STATUS_LABELS: Record<string, string> = {
   PLACED: 'Placed',
@@ -118,7 +119,7 @@ export function ShopOrdersPage() {
                       {order.customerName ?? '—'}
                     </td>
                     <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">
-                      {((order.totalCents ?? order.subtotalCents) / 100).toFixed(2)} {order.currency.toUpperCase()}
+                      {formatOrderTotal(order)}
                     </td>
                     <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
                       {new Date(order.createdAt).toLocaleDateString('en-GB', {

@@ -4,12 +4,9 @@ import { useGetPlanPricingQuery, useGetPlanQuery, useSetPlanPricingMutation } fr
 import { apiErrorMessage } from '../utils/apiError';
 import type { PlanPricingResponse } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { formatCents, parseAmountToCents } from '../utils/money';
 
 const CURRENCIES = ['EUR', 'AUD', 'USD', 'GBP', 'NZD', 'CAD'];
-
-function formatCents(cents: number) {
-  return (cents / 100).toFixed(2);
-}
 
 interface PricingRowProps {
   planId: string;
@@ -42,9 +39,9 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
   }
 
   async function handleSave() {
-    const monthlyVal = Math.round(Number(monthly) * 100);
-    const yearlyVal = Math.round(Number(yearly) * 100);
-    if (isNaN(monthlyVal) || monthlyVal < 0 || isNaN(yearlyVal) || yearlyVal < 0) {
+    const monthlyVal = parseAmountToCents(monthly);
+    const yearlyVal = parseAmountToCents(yearly);
+    if (monthlyVal === null || yearlyVal === null) {
       setStatus('error');
       setErrorMsg('Invalid amount');
       return;

@@ -9,6 +9,15 @@ import {
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import {
+  LIMIT_KEYS,
+  buildLimitOverrideBody,
+  endOfDayIso,
+  limitLabel,
+  limitOverrideError,
+  planOverrideError,
+  type LimitKey,
+} from './subscription-override';
 
 const STATUS_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
@@ -17,17 +26,6 @@ const STATUS_COLORS: Record<string, string> = {
   canceled: 'bg-orange-100 text-orange-700',
   expired: 'bg-red-100 text-red-600',
 };
-
-const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'] as const;
-
-// A date-only input means "through the end of that day" in the superadmin's local time.
-function endOfDayIso(date: string): string {
-  return new Date(`${date}T23:59:59`).toISOString();
-}
-
-function limitLabel(value: number): string {
-  return value === -1 ? 'unlimited' : String(value);
-}
 
 export function ShopSubscriptionPage() {
   const { shopId } = useParams<{ shopId: string }>();
@@ -46,7 +44,7 @@ export function ShopSubscriptionPage() {
 
   const [setLimitOverride, { isLoading: isSettingLimit }] = useSetLimitOverrideMutation();
   const [clearLimitOverride, { isLoading: isClearingLimit }] = useClearLimitOverrideMutation();
-  const [limitKey, setLimitKey] = useState<(typeof LIMIT_KEYS)[number]>('ORDERS_PER_MONTH');
+  const [limitKey, setLimitKey] = useState<LimitKey>('ORDERS_PER_MONTH');
   const [limitValue, setLimitValue] = useState('');
   const [limitReason, setLimitReason] = useState('');
   const [limitExpiresAt, setLimitExpiresAt] = useState('');
@@ -60,12 +58,9 @@ export function ShopSubscriptionPage() {
   async function handleOverride() {
     setOverrideError(null);
     setOverrideSuccess(false);
-    if (!selectedPlanId) {
-      setOverrideError('Please select a plan');
-      return;
-    }
-    if (!reason.trim()) {
-      setOverrideError('Override reason is required');
+    const invalid = planOverrideError(selectedPlanId, reason);
+    if (invalid) {
+      setOverrideError(invalid);
       return;
     }
     try {
@@ -88,23 +83,15 @@ export function ShopSubscriptionPage() {
   async function handleSetLimit() {
     setLimitError(null);
     setLimitDone(null);
-    const value = Number(limitValue);
-    if (limitValue.trim() === '' || !Number.isInteger(value) || value < -1) {
-      setLimitError('Enter a whole number, -1 or higher');
-      return;
-    }
-    if (!limitReason.trim()) {
-      setLimitError('Reason is required');
+    const invalid = limitOverrideError(limitValue, limitReason);
+    if (invalid) {
+      setLimitError(invalid);
       return;
     }
     try {
       await setLimitOverride({
         shopId: shopId!,
-        body: {
-          limits: [{ key: limitKey, value }],
-          reason: limitReason.trim(),
-          expiresAt: limitExpiresAt ? endOfDayIso(limitExpiresAt) : null,
-        },
+        body: buildLimitOverrideBody(limitKey, limitValue, limitReason, limitExpiresAt),
       }).unwrap();
       setLimitDone('set');
       setLimitValue('');
@@ -344,7 +331,7 @@ export function ShopSubscriptionPage() {
               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limit</label>
               <select
                 value={limitKey}
-                onChange={(e) => setLimitKey(e.target.value as (typeof LIMIT_KEYS)[number])}
+                onChange={(e) => setLimitKey(e.target.value as LimitKey)}
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
               >
                 {LIMIT_KEYS.map((k) => (
