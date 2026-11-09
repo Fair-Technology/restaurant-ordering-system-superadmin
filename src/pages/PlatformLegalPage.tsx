@@ -3,51 +3,9 @@ import {
   useGetPlatformLegalIdentityQuery,
   useGetPlatformLegalPublicQuery,
   useUpdatePlatformLegalIdentityMutation,
-  type PlatformLegalIdentityResponse,
-  type PlatformLegalIdentityUpdateBody,
 } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
-
-interface FormState {
-  platformName: string;
-  salesSiteUrl: string;
-  operatorName: string;
-  operatorAddress: string;
-  operatorEmail: string;
-  euAppointed: boolean;
-  euName: string;
-  euAddress: string;
-  euEmail: string;
-}
-
-function toForm(p: PlatformLegalIdentityResponse): FormState {
-  return {
-    platformName: p.platformName,
-    salesSiteUrl: p.salesSiteUrl ?? '',
-    operatorName: p.operator.legalName,
-    operatorAddress: p.operator.address,
-    operatorEmail: p.operator.email,
-    euAppointed: p.euRepresentative !== null,
-    euName: p.euRepresentative?.name ?? '',
-    euAddress: p.euRepresentative?.address ?? '',
-    euEmail: p.euRepresentative?.email ?? '',
-  };
-}
-
-function toBody(f: FormState): PlatformLegalIdentityUpdateBody {
-  return {
-    platformName: f.platformName.trim(),
-    salesSiteUrl: f.salesSiteUrl.trim() === '' ? null : f.salesSiteUrl.trim(),
-    operator: {
-      legalName: f.operatorName.trim(),
-      address: f.operatorAddress.trim(),
-      email: f.operatorEmail.trim(),
-    },
-    euRepresentative: f.euAppointed
-      ? { name: f.euName.trim(), address: f.euAddress.trim(), email: f.euEmail.trim() }
-      : null,
-  };
-}
+import { toPlatformLegalBody, toPlatformLegalForm, type PlatformLegalFormState } from './platform-legal';
 
 const inputClass =
   'w-full rounded-lg border border-white/50 bg-white/60 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400';
@@ -59,7 +17,7 @@ export function PlatformLegalPage() {
   const [updateIdentity, { isLoading: isSaving }] = useUpdatePlatformLegalIdentityMutation();
 
   // Edits live in `draft`; until the first keystroke the form shows what the server sent.
-  const [draft, setDraft] = useState<FormState | null>(null);
+  const [draft, setDraft] = useState<PlatformLegalFormState | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -72,9 +30,9 @@ export function PlatformLegalPage() {
     );
   }
 
-  const form = draft ?? toForm(data);
+  const form = draft ?? toPlatformLegalForm(data);
 
-  function update(patch: Partial<FormState>) {
+  function update(patch: Partial<PlatformLegalFormState>) {
     setSaved(false);
     setDraft({ ...form, ...patch });
   }
@@ -83,7 +41,7 @@ export function PlatformLegalPage() {
     setError(null);
     setSaved(false);
     try {
-      await updateIdentity(toBody(form)).unwrap();
+      await updateIdentity(toPlatformLegalBody(form)).unwrap();
       setDraft(null);
       setSaved(true);
     } catch (err) {

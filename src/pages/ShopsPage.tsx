@@ -16,8 +16,7 @@ import {
 import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getShopStatus, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
-
-const PAGE_SIZE = 20;
+import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -49,9 +48,7 @@ export function ShopsPage() {
   const [setMissedOrdersPauseLimit, { isLoading: isSavingLimit }] =
     useSetMissedOrdersPauseLimitMutation();
 
-  const filtered = (shops?.shops ?? []).filter(
-    (s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  const filtered = filterShops(shops?.shops ?? [], search, showDeleted);
 
   const closeRestore = () => {
     if (isRestoring) return;
@@ -79,13 +76,10 @@ export function ShopsPage() {
 
   const confirmOffline = async () => {
     if (!offlineTarget) return;
-    const goOffline = !offlineTarget.offlineBySuperadmin;
+    const request = buildSuperadminOfflineRequest(offlineTarget, offlineReason);
+    const goOffline = request.offline;
     try {
-      await setSuperadminOffline({
-        shopId: offlineTarget.id,
-        offline: goOffline,
-        reason: goOffline ? offlineReason.trim() : undefined,
-      }).unwrap();
+      await setSuperadminOffline(request).unwrap();
       setOfflineTarget(null);
       setOfflineReason('');
       setOfflineError(null);
@@ -121,8 +115,7 @@ export function ShopsPage() {
     }
   };
 
-  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
-  const pageItems = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const { pageItems, totalPages } = pageOf(filtered, page, PAGE_SIZE);
 
   const handleSearchChange = (value: string) => {
     setSearch(value);

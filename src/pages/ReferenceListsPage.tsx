@@ -9,8 +9,8 @@ import type {
   TaxRateRowDto,
 } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
 
-const FULFILMENT_MODES: FulfilmentModeKey[] = ['collection', 'delivery', 'dine_in'];
 const MODE_LABELS: Record<FulfilmentModeKey, string> = {
   collection: 'Collection',
   delivery: 'Delivery',
@@ -314,11 +314,9 @@ function TaxRatesSection({
   const [startsAt, setStartsAt] = useState('');
 
   function handleAdd() {
-    if (!taxClassId || !pct || !startsAt) return;
-    const modes: FulfilmentModeKey[] = mode === 'all' ? FULFILMENT_MODES : [mode];
-    const rateBasisPoints = Math.round(Number(pct) * 100);
-    const effectiveFrom = new Date(startsAt).toISOString();
-    onAdd(modes.map((fulfilmentMode) => ({ taxClassId, fulfilmentMode, rateBasisPoints, effectiveFrom })));
+    const rows = buildTaxRateRows({ taxClassId, mode, pct, startsAt });
+    if (!rows) return;
+    onAdd(rows);
     setPct('');
     setStartsAt('');
   }
@@ -350,7 +348,7 @@ function TaxRatesSection({
                 {taxClasses.find((c) => c.id === row.taxClassId)?.labels.en ?? row.taxClassId}
               </td>
               <td className="px-4 py-2 text-gray-700">{MODE_LABELS[row.fulfilmentMode]}</td>
-              <td className="px-4 py-2 text-gray-700">{(row.rateBasisPoints / 100).toFixed(2)}%</td>
+              <td className="px-4 py-2 text-gray-700">{formatBasisPoints(row.rateBasisPoints)}</td>
               <td className="px-4 py-2 text-gray-700">{new Date(row.effectiveFrom).toLocaleString()}</td>
             </tr>
           ))}
