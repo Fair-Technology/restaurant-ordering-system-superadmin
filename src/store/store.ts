@@ -1,7 +1,5 @@
 import { configureStore } from '@reduxjs/toolkit';
 import { baseApi } from '../services/baseApi';
-// Side-effect import: registers cache-invalidation overrides the generated client cannot express.
-import '../services/tagOverrides';
 
 export const store = configureStore({
   reducer: {

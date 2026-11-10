@@ -27,7 +27,6 @@ describe('approving or rejecting a name change refreshes the shops list', () => 
 
   async function setup() {
     const { api } = await import('./api');
-    await import('./tagOverrides');
     const store = configureStore({
       reducer: { [api.reducerPath]: api.reducer },
       middleware: (g) => g().concat(api.middleware),
