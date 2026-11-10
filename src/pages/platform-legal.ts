@@ -1,4 +1,7 @@
-import type { PlatformLegalIdentityResponse, PlatformLegalIdentityUpdateBody } from '../services/api';
+import type { PlatformLegalIdentityDto } from '../services/api';
+
+/** The backend declares no request DTO for this PUT, so the body is derived from the response DTO. */
+export type PlatformLegalIdentityUpdateBody = Omit<PlatformLegalIdentityDto, 'updatedAt' | 'updatedBy'>;
 
 export interface PlatformLegalFormState {
   platformName: string;
@@ -12,7 +15,7 @@ export interface PlatformLegalFormState {
   euEmail: string;
 }
 
-export function toPlatformLegalForm(p: PlatformLegalIdentityResponse): PlatformLegalFormState {
+export function toPlatformLegalForm(p: PlatformLegalIdentityDto): PlatformLegalFormState {
   return {
     platformName: p.platformName,
     salesSiteUrl: p.salesSiteUrl ?? '',

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import {
   useGetPlatformLegalIdentityQuery,
-  useGetPlatformLegalPublicQuery,
+  useGetPlatformLegalQuery,
   useUpdatePlatformLegalIdentityMutation,
 } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
@@ -13,7 +13,7 @@ const labelClass = 'block text-xs font-medium text-gray-500 uppercase tracking-w
 
 export function PlatformLegalPage() {
   const { data, isLoading, isError } = useGetPlatformLegalIdentityQuery();
-  const { data: publicData } = useGetPlatformLegalPublicQuery();
+  const { data: publicData } = useGetPlatformLegalQuery();
   const [updateIdentity, { isLoading: isSaving }] = useUpdatePlatformLegalIdentityMutation();
 
   // Edits live in `draft`; until the first keystroke the form shows what the server sent.
@@ -41,7 +41,7 @@ export function PlatformLegalPage() {
     setError(null);
     setSaved(false);
     try {
-      await updateIdentity(toPlatformLegalBody(form)).unwrap();
+      await updateIdentity({ body: toPlatformLegalBody(form) }).unwrap();
       setDraft(null);
       setSaved(true);
     } catch (err) {

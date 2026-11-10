@@ -1,23 +1,26 @@
 import { type ReactNode, useState } from 'react';
 import { useGetReferenceListsQuery, useUpdateReferenceListsMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
-import type {
-  FulfilmentModeKey,
-  ReferenceEntry,
-  ReferenceListsResponse,
-  ReferenceListsUpdateBody,
-  TaxRateRowDto,
-} from '../services/api';
+import type { AllergenDef, FulfilmentMode, ReferenceListsResultDto, TaxRateRow } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
 
-const MODE_LABELS: Record<FulfilmentModeKey, string> = {
+/** Common shape of allergen, additive and tax-class rows. */
+type ReferenceEntry = Pick<AllergenDef, 'id' | 'labels' | 'isActive'>;
+
+/** The backend declares no request DTO for this PUT, so the body is derived from the response DTO. */
+type ReferenceListsUpdateBody = Pick<
+  ReferenceListsResultDto,
+  'allergens' | 'additives' | 'taxClasses' | 'defaultTaxClassId' | 'taxRates'
+>;
+
+const MODE_LABELS: Record<FulfilmentMode, string> = {
   collection: 'Collection',
   delivery: 'Delivery',
   dine_in: 'Dine-in',
 };
 
-function toUpdateBody(data: ReferenceListsResponse): ReferenceListsUpdateBody {
+function toUpdateBody(data: ReferenceListsResultDto): ReferenceListsUpdateBody {
   return {
     allergens: data.allergens,
     additives: data.additives,
@@ -73,7 +76,7 @@ function ReferenceListsEditor({
   data,
 }: {
   countryCode: string;
-  data: ReferenceListsResponse;
+  data: ReferenceListsResultDto;
 }) {
   const [updateReferenceLists, { isLoading: isSaving }] = useUpdateReferenceListsMutation();
   // Initialised once from the loaded data (this component remounts, via the `key={countryCode}`
@@ -107,7 +110,7 @@ function ReferenceListsEditor({
     }));
   }
 
-  function addTaxRates(rows: TaxRateRowDto[]) {
+  function addTaxRates(rows: TaxRateRow[]) {
     setSaved(false);
     setDraft((prev) => ({ ...prev, taxRates: [...prev.taxRates, ...rows] }));
   }
@@ -304,12 +307,12 @@ function TaxRatesSection({
   taxClasses,
   onAdd,
 }: {
-  taxRates: TaxRateRowDto[];
+  taxRates: TaxRateRow[];
   taxClasses: ReferenceEntry[];
-  onAdd: (rows: TaxRateRowDto[]) => void;
+  onAdd: (rows: TaxRateRow[]) => void;
 }) {
   const [taxClassId, setTaxClassId] = useState(taxClasses[0]?.id ?? '');
-  const [mode, setMode] = useState<FulfilmentModeKey | 'all'>('all');
+  const [mode, setMode] = useState<FulfilmentMode | 'all'>('all');
   const [pct, setPct] = useState('');
   const [startsAt, setStartsAt] = useState('');
 
@@ -373,7 +376,7 @@ function TaxRatesSection({
           <label className="text-xs text-gray-500">Mode</label>
           <select
             value={mode}
-            onChange={(e) => setMode(e.target.value as FulfilmentModeKey | 'all')}
+            onChange={(e) => setMode(e.target.value as FulfilmentMode | 'all')}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
           >
             <option value="all">All three</option>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetPlanPricingQuery, useGetPlanQuery, useSetPlanPricingMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
-import type { PlanPricingResponse } from '../services/api';
+import type { PlanPricing } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { formatCents, parseAmountToCents } from '../utils/money';
 
@@ -11,7 +11,7 @@ const CURRENCIES = ['EUR', 'AUD', 'USD', 'GBP', 'NZD', 'CAD'];
 interface PricingRowProps {
   planId: string;
   currency: string;
-  existing: PlanPricingResponse | undefined;
+  existing: PlanPricing | undefined;
   isFree: boolean;
 }
 
@@ -51,7 +51,7 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
     try {
       await setPricing({
         planId,
-        setPlanPricingRequest: {
+        setPlanPricingRequestDto: {
           currency,
           monthlyAmountCents: monthlyVal,
           yearlyAmountCents: yearlyVal,
@@ -169,7 +169,7 @@ export function PlanPricingPage() {
   const { data: planData } = useGetPlanQuery({ planId: planId! });
   const { data: pricingData, isLoading } = useGetPlanPricingQuery({ planId: planId! });
 
-  const pricing: PlanPricingResponse[] = Array.isArray(pricingData) ? pricingData : [];
+  const pricing: PlanPricing[] = Array.isArray(pricingData) ? pricingData : [];
   const pricingByCurrency = Object.fromEntries(pricing.map((p) => [p.currency.toUpperCase(), p]));
   const isFree = planData?.plan?.isDefault ?? false;
 

@@ -9,7 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "typecheck": "tsc -b",
-    "test": "vitest run"
+    "test": "vitest run",
+    "openapi:generate": "npx @rtk-query/codegen-openapi openapi/rtk-query.config.cjs"
   },
   "dependencies": {
     "@azure/msal-browser": "^5.23.0",
@@ -23,6 +24,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
+    "@rtk-query/codegen-openapi": "^2.2.0",
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.20.4",
     "@types/react": "^19.3.0",

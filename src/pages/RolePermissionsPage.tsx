@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ShopPermission } from '../services/api';
 import { useGetRolePermissionsQuery, useUpdateRolePermissionsMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
@@ -8,8 +9,8 @@ export function RolePermissionsPage() {
   const { data, isLoading, isError } = useGetRolePermissionsQuery();
   const [updateRolePermissions, { isLoading: isSaving }] = useUpdateRolePermissionsMutation();
 
-  const [manager, setManager] = useState<string[]>([]);
-  const [staff, setStaff] = useState<string[]>([]);
+  const [manager, setManager] = useState<ShopPermission[]>([]);
+  const [staff, setStaff] = useState<ShopPermission[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -23,7 +24,7 @@ export function RolePermissionsPage() {
     }
   }
 
-  function toggle(role: 'manager' | 'staff', key: string) {
+  function toggle(role: 'manager' | 'staff', key: ShopPermission) {
     setSaved(false);
     const setter = role === 'manager' ? setManager : setStaff;
     setter((prev) => togglePermission(prev, key));
@@ -33,7 +34,7 @@ export function RolePermissionsPage() {
     setError(null);
     setSaved(false);
     try {
-      await updateRolePermissions({ manager, staff }).unwrap();
+      await updateRolePermissions({ updateRolePermissionsRequestDto: { manager, staff } }).unwrap();
       setSaved(true);
     } catch (err) {
       setError(apiErrorMessage(err, 'Failed to save role permissions'));

@@ -1,4 +1,4 @@
-import type { UserProfileResponse } from '../services/api';
+import type { GetMeResultDto } from '../services/api';
 
 export type AccessDecision = 'signing-in' | 'login' | 'loading-profile' | 'denied' | 'granted';
 
@@ -7,7 +7,7 @@ export interface AccessInput {
   msalSettled: boolean;
   isAuthenticated: boolean;
   profileLoading: boolean;
-  profile: Pick<UserProfileResponse, 'systemRole'> | undefined;
+  profile: Pick<GetMeResultDto, 'systemRole'> | undefined;
 }
 
 /**

@@ -1,6 +1,6 @@
-import type { FulfilmentModeKey, TaxRateRowDto } from '../services/api';
+import type { FulfilmentMode, TaxRateRow } from '../services/api';
 
-export const FULFILMENT_MODES: FulfilmentModeKey[] = ['collection', 'delivery', 'dine_in'];
+export const FULFILMENT_MODES: FulfilmentMode[] = ['collection', 'delivery', 'dine_in'];
 
 /** "19" (percent) -> 1900 basis points. No range check here; the backend enforces 0..10000. */
 export function percentToBasisPoints(pct: string): number {
@@ -18,13 +18,13 @@ export function formatBasisPoints(bp: number): string {
  */
 export function buildTaxRateRows(input: {
   taxClassId: string;
-  mode: FulfilmentModeKey | 'all';
+  mode: FulfilmentMode | 'all';
   pct: string;
   startsAt: string;
-}): TaxRateRowDto[] | null {
+}): TaxRateRow[] | null {
   const { taxClassId, mode, pct, startsAt } = input;
   if (!taxClassId || !pct || !startsAt) return null;
-  const modes: FulfilmentModeKey[] = mode === 'all' ? FULFILMENT_MODES : [mode];
+  const modes: FulfilmentMode[] = mode === 'all' ? FULFILMENT_MODES : [mode];
   const rateBasisPoints = percentToBasisPoints(pct);
   const effectiveFrom = new Date(startsAt).toISOString();
   return modes.map((fulfilmentMode) => ({ taxClassId, fulfilmentMode, rateBasisPoints, effectiveFrom }));

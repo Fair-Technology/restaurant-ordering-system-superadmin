@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
-import { useGetAuditEntriesByShopQuery } from '../services/api';
+import { useGetAuditEntriesQuery } from '../services/api';
 import type { AuditEntry } from '../services/api';
 import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
@@ -138,7 +138,7 @@ export function ShopActivityPage() {
   const [entityFilter, setEntityFilter] = useState<string>('all');
   const pageSize = 20;
 
-  const { data, isLoading, isError } = useGetAuditEntriesByShopQuery(
+  const { data, isLoading, isError } = useGetAuditEntriesQuery(
     { shopId: shopId!, page, pageSize },
     { skip: !shopId },
   );
