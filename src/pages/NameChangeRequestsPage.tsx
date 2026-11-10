@@ -7,6 +7,7 @@ import {
 import { apiErrorMessage } from '../utils/apiError';
 import { FileEdit } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { WriteOnly } from '../auth/WriteOnly';
 
 export function NameChangeRequestsPage() {
   const { data: shopsData, isLoading, isError } = useGetShopsQuery();
@@ -112,6 +113,7 @@ export function NameChangeRequestsPage() {
                       {new Date(req.requestedAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-4">
+                      <WriteOnly>
                       <div className="flex items-center gap-2 justify-end">
                         <button
                           onClick={() => handleApprove(shop.id)}
@@ -128,6 +130,7 @@ export function NameChangeRequestsPage() {
                           Reject
                         </button>
                       </div>
+                      </WriteOnly>
                     </td>
                   </tr>
                 );

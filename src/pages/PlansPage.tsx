@@ -4,8 +4,11 @@ import { useGetPlansQuery, useCreatePlanMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
 import type { Plan } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { WriteOnly } from '../auth/WriteOnly';
+import { useCanWrite } from '../auth/platformAccess';
 
 export function PlansPage() {
+  const canWrite = useCanWrite();
   const { data, isLoading, isError } = useGetPlansQuery();
   const [createPlan, { isLoading: isCreating }] = useCreatePlanMutation();
 
@@ -45,15 +48,17 @@ export function PlansPage() {
           <h1 className="text-2xl font-semibold text-indigo-900">Plans</h1>
           <p className="text-sm text-gray-500 mt-0.5">{plans.length} plan{plans.length !== 1 ? 's' : ''}</p>
         </div>
-        <button
-          onClick={() => setShowCreate((v) => !v)}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
-        >
-          + New Plan
-        </button>
+        <WriteOnly>
+          <button
+            onClick={() => setShowCreate((v) => !v)}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 transition-colors"
+          >
+            + New Plan
+          </button>
+        </WriteOnly>
       </div>
 
-      {showCreate && (
+      {showCreate && canWrite && (
         <div className="glass-card p-5 mb-4 space-y-4">
           <p className="text-sm font-medium text-gray-700">Create New Plan</p>
           <div className="flex flex-col gap-1.5">
@@ -99,7 +104,7 @@ export function PlansPage() {
 
       {!isError && plans.length === 0 && (
         <div className="glass-card p-12 text-center text-sm text-gray-500">
-          No plans yet. Create one above.
+          No plans yet.{canWrite && ' Create one above.'}
         </div>
       )}
 

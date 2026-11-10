@@ -4,7 +4,8 @@ import { Navigate } from 'react-router-dom';
 import { useGetMeQuery } from '../services/api';
 import { AccessDeniedPage } from '../pages/AccessDeniedPage';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
-import { decideAccess } from './access';
+import { canWrite, decideAccess } from './access';
+import { CanWriteContext } from './platformAccess';
 
 interface Props {
   children: React.ReactNode;
@@ -33,6 +34,6 @@ export function RequireAuth({ children }: Props) {
     case 'denied':
       return <AccessDeniedPage />;
     case 'granted':
-      return <>{children}</>;
+      return <CanWriteContext.Provider value={canWrite(profile)}>{children}</CanWriteContext.Provider>;
   }
 }

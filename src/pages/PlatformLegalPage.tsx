@@ -6,6 +6,7 @@ import {
 } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { toPlatformLegalBody, toPlatformLegalForm, type PlatformLegalFormState } from './platform-legal';
+import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
 const inputClass =
   'w-full rounded-lg border border-white/50 bg-white/60 px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-indigo-400';
@@ -61,7 +62,8 @@ export function PlatformLegalPage() {
         </p>
       </div>
 
-      <div className="glass-card p-6 flex flex-col gap-6">
+      <div className="glass-card p-6">
+      <WriteFieldset className="flex flex-col gap-6">
         <section className="grid gap-4 md:grid-cols-2">
           <div>
             <label className={labelClass} htmlFor="platformName">Platform name</label>
@@ -166,17 +168,20 @@ export function PlatformLegalPage() {
           )}
         </section>
 
-        <div className="flex items-center gap-4">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {isSaving ? 'Saving…' : 'Save'}
-          </button>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {saved && <p className="text-green-600 text-sm">Saved.</p>}
-        </div>
+        <WriteOnly>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {isSaving ? 'Saving…' : 'Save'}
+            </button>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {saved && <p className="text-green-600 text-sm">Saved.</p>}
+          </div>
+        </WriteOnly>
+      </WriteFieldset>
       </div>
 
       {publicData && (
