@@ -1,9 +1,9 @@
-import type { ShopResponse } from '../services/api';
+import type { ShopSummaryDto } from '../services/api';
 
 export const PAGE_SIZE = 20;
 
 /** Deleted shops are hidden unless showDeleted; name search is case-insensitive substring. */
-export function filterShops(shops: readonly ShopResponse[], search: string, showDeleted: boolean): ShopResponse[] {
+export function filterShops(shops: readonly ShopSummaryDto[], search: string, showDeleted: boolean): ShopSummaryDto[] {
   const needle = search.toLowerCase();
   return shops.filter((s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(needle));
 }
@@ -18,7 +18,7 @@ export function pageOf<T>(items: readonly T[], page: number, size = PAGE_SIZE): 
  * A reason is only sent when going offline.
  */
 export function buildSuperadminOfflineRequest(
-  shop: Pick<ShopResponse, 'id' | 'offlineBySuperadmin'>,
+  shop: Pick<ShopSummaryDto, 'id' | 'offlineBySuperadmin'>,
   reason: string,
 ): { shopId: string; offline: boolean; reason: string | undefined } {
   const goOffline = !shop.offlineBySuperadmin;

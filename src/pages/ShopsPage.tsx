@@ -4,8 +4,8 @@ import {
   useGetShopsQuery,
   useRestoreShopMutation,
   useSetMissedOrdersPauseLimitMutation,
-  useSetShopSuperadminOfflineMutation,
-  type ShopResponse,
+  useSetShopOfflineBySuperadminMutation,
+  type ShopSummaryDto,
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
 import {
@@ -32,17 +32,17 @@ export function ShopsPage() {
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [showDeleted, setShowDeleted] = useState(false);
-  const [restoreTarget, setRestoreTarget] = useState<ShopResponse | null>(null);
+  const [restoreTarget, setRestoreTarget] = useState<ShopSummaryDto | null>(null);
   const [restoreError, setRestoreError] = useState<string | null>(null);
   const [restoreShop, { isLoading: isRestoring }] = useRestoreShopMutation();
 
-  const [offlineTarget, setOfflineTarget] = useState<ShopResponse | null>(null);
+  const [offlineTarget, setOfflineTarget] = useState<ShopSummaryDto | null>(null);
   const [offlineReason, setOfflineReason] = useState('');
   const [offlineError, setOfflineError] = useState<string | null>(null);
   const [setSuperadminOffline, { isLoading: isSettingOffline }] =
-    useSetShopSuperadminOfflineMutation();
+    useSetShopOfflineBySuperadminMutation();
 
-  const [limitTarget, setLimitTarget] = useState<ShopResponse | null>(null);
+  const [limitTarget, setLimitTarget] = useState<ShopSummaryDto | null>(null);
   const [limitValue, setLimitValue] = useState(3);
   const [limitError, setLimitError] = useState<string | null>(null);
   const [setMissedOrdersPauseLimit, { isLoading: isSavingLimit }] =
@@ -79,7 +79,7 @@ export function ShopsPage() {
     const request = buildSuperadminOfflineRequest(offlineTarget, offlineReason);
     const goOffline = request.offline;
     try {
-      await setSuperadminOffline(request).unwrap();
+      await setSuperadminOffline({ shopId: request.shopId, body: { offline: request.offline, reason: request.reason } }).unwrap();
       setOfflineTarget(null);
       setOfflineReason('');
       setOfflineError(null);
@@ -92,7 +92,7 @@ export function ShopsPage() {
     }
   };
 
-  const openLimit = (shop: ShopResponse) => {
+  const openLimit = (shop: ShopSummaryDto) => {
     setLimitValue(missedOrdersLimitOf(shop));
     setLimitError(null);
     setLimitTarget(shop);
@@ -107,7 +107,7 @@ export function ShopsPage() {
   const confirmLimit = async () => {
     if (!limitTarget) return;
     try {
-      await setMissedOrdersPauseLimit({ shopId: limitTarget.id, limit: limitValue }).unwrap();
+      await setMissedOrdersPauseLimit({ shopId: limitTarget.id, body: { limit: limitValue } }).unwrap();
       setLimitTarget(null);
       setLimitError(null);
     } catch (err) {

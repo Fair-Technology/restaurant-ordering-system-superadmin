@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import type { ShopResponse } from '../services/api';
+import type { ShopSummaryDto } from '../services/api';
 import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
 
-const shop = (over: Partial<ShopResponse>): ShopResponse => ({
-  id: 'id',
-  name: 'Shop',
-  slug: 'shop',
-  isDeleted: false,
-  createdAt: '2026-01-01T00:00:00Z',
-  updatedAt: '2026-01-01T00:00:00Z',
-  ...over,
-});
+// Only the fields these helpers read are filled in; the cast stands in for the rest of the summary.
+const shop = (over: Partial<ShopSummaryDto>): ShopSummaryDto =>
+  ({
+    id: 'id',
+    name: 'Shop',
+    slug: 'shop',
+    isDeleted: false,
+    ...over,
+  }) as ShopSummaryDto;
 
 describe('buildSuperadminOfflineRequest — the platform offline lock', () => {
   it('takes an unlocked shop offline, with the trimmed reason', () => {

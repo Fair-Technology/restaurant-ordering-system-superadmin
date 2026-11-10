@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { PlatformLegalIdentityResponse } from '../services/api';
+import type { PlatformLegalIdentityDto } from '../services/api';
 import { toPlatformLegalBody, toPlatformLegalForm } from './platform-legal';
 
 // Placeholder values only — not real operator data.
-const identity: PlatformLegalIdentityResponse = {
+const identity: PlatformLegalIdentityDto = {
   platformName: 'Example Platform',
   salesSiteUrl: 'https://example.test',
   operator: { legalName: 'Example GmbH', address: '1 Example St', email: 'legal@example.test' },

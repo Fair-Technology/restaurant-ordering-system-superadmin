@@ -66,7 +66,7 @@ export function ShopSubscriptionPage() {
     try {
       await override({
         shopId: shopId!,
-        overrideRequest: {
+        overrideShopSubscriptionRequestDto: {
           planId: selectedPlanId,
           overrideReason: reason.trim(),
           overrideExpiresAt: expiresAt ? endOfDayIso(expiresAt) : null,
@@ -91,7 +91,7 @@ export function ShopSubscriptionPage() {
     try {
       await setLimitOverride({
         shopId: shopId!,
-        body: buildLimitOverrideBody(limitKey, limitValue, limitReason, limitExpiresAt),
+        setLimitOverrideRequestDto: buildLimitOverrideBody(limitKey, limitValue, limitReason, limitExpiresAt),
       }).unwrap();
       setLimitDone('set');
       setLimitValue('');

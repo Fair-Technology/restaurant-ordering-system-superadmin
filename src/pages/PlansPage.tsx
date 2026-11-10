@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetPlansQuery, useCreatePlanMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
-import type { PlanResponse } from '../services/api';
+import type { Plan } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 export function PlansPage() {
@@ -22,7 +22,7 @@ export function PlansPage() {
     setCreateError(null);
     try {
       await createPlan({
-        createPlanRequest: { name: newName.trim(), internalKey: newKey.trim() },
+        createPlanRequestDto: { name: newName.trim(), internalKey: newKey.trim() },
       }).unwrap();
       setShowCreate(false);
       setNewName('');
@@ -32,7 +32,7 @@ export function PlansPage() {
     }
   }
 
-  const plans: PlanResponse[] = data?.plans ?? [];
+  const plans: Plan[] = data?.plans ?? [];
 
   if (isLoading) {
     return <LoadingScreen title="Loading plans" subtitle="Fetching plan definitions and pricing settings." />;

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetPlanQuery, useUpdatePlanMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
-import type { PlanLimitResponse } from '../services/api';
+import type { PlanLimit } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 
 const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'];
@@ -16,7 +16,7 @@ export function EditPlanPage() {
   const [name, setName] = useState('');
   const [isVisible, setIsVisible] = useState(true);
   const [sortOrder, setSortOrder] = useState(0);
-  const [limits, setLimits] = useState<PlanLimitResponse[]>([]);
+  const [limits, setLimits] = useState<PlanLimit[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
 
@@ -54,7 +54,7 @@ export function EditPlanPage() {
     try {
       await updatePlan({
         planId: planId!,
-        updatePlanRequest: { name, isVisible, sortOrder, limits },
+        updatePlanRequestDto: { name, isVisible, sortOrder, limits },
       }).unwrap();
       setSaved(true);
     } catch (err) {

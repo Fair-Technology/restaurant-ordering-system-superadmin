@@ -1,4 +1,4 @@
-import type { ShopResponse } from '../services/api';
+import type { ShopSummaryDto } from '../services/api';
 
 export type ShopStatusKind = 'online' | 'offline-owner' | 'offline-platform';
 
@@ -8,7 +8,7 @@ export interface ShopStatus {
   ordersPaused: boolean;
 }
 
-type StatusInput = Pick<ShopResponse, 'isPaused' | 'ordersPaused' | 'offlineBySuperadmin'>;
+type StatusInput = Partial<Pick<ShopSummaryDto, 'isPaused' | 'ordersPaused' | 'offlineBySuperadmin'>>;
 
 /** Platform offline wins over owner offline: the owner cannot undo it. */
 export const getShopStatus = (shop: StatusInput): ShopStatus => {
