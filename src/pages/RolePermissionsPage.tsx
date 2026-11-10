@@ -4,6 +4,7 @@ import { useGetRolePermissionsQuery, useUpdateRolePermissionsMutation } from '..
 import { apiErrorMessage } from '../utils/apiError';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PERMISSION_ROWS, togglePermission } from './role-permissions';
+import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
 export function RolePermissionsPage() {
   const { data, isLoading, isError } = useGetRolePermissionsQuery();
@@ -60,6 +61,7 @@ export function RolePermissionsPage() {
       </div>
 
       <div className="glass-card overflow-hidden">
+        <WriteFieldset>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-white/30">
@@ -104,18 +106,21 @@ export function RolePermissionsPage() {
             ))}
           </tbody>
         </table>
+        </WriteFieldset>
 
-        <div className="px-6 py-4 border-t border-white/30 flex items-center gap-4">
-          <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {isSaving ? 'Saving…' : 'Save Changes'}
-          </button>
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-          {saved && <p className="text-green-600 text-sm">Saved successfully.</p>}
-        </div>
+        <WriteOnly>
+          <div className="px-6 py-4 border-t border-white/30 flex items-center gap-4">
+            <button
+              onClick={handleSave}
+              disabled={isSaving}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {isSaving ? 'Saving…' : 'Save Changes'}
+            </button>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {saved && <p className="text-green-600 text-sm">Saved successfully.</p>}
+          </div>
+        </WriteOnly>
       </div>
     </div>
   );

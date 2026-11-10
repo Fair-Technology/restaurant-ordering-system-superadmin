@@ -17,6 +17,7 @@ import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-rea
 import { getShopStatus, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
+import { useCanWrite } from '../auth/platformAccess';
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
@@ -28,6 +29,7 @@ const STATUS_STYLE: Record<ShopStatusKind, string> = {
 };
 
 export function ShopsPage() {
+  const canWrite = useCanWrite();
   const { data: shops, isLoading, isError } = useGetShopsQuery();
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -269,7 +271,12 @@ export function ShopsPage() {
                           Activity
                           <ArrowRight className="w-3 h-3" />
                         </Link>
-                        {!shop.isDeleted && (
+                        {!canWrite && !shop.isDeleted && (
+                          <span className="text-gray-500 text-xs font-medium">
+                            {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
+                          </span>
+                        )}
+                        {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => openLimit(shop)}
                             className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
@@ -277,7 +284,7 @@ export function ShopsPage() {
                             {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
                           </button>
                         )}
-                        {!shop.isDeleted && (
+                        {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => setOfflineTarget(shop)}
                             className={`${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
@@ -285,7 +292,7 @@ export function ShopsPage() {
                             {shop.offlineBySuperadmin ? 'Bring back online' : 'Take offline'}
                           </button>
                         )}
-                        {shop.isDeleted && (
+                        {canWrite && shop.isDeleted && (
                           <button
                             onClick={() => setRestoreTarget(shop)}
                             className="text-green-700 hover:text-green-900 text-xs font-medium transition-colors"

@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../utils/apiError';
 import type { PlanPricing } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { formatCents, parseAmountToCents } from '../utils/money';
+import { useCanWrite } from '../auth/platformAccess';
 
 const CURRENCIES = ['EUR', 'AUD', 'USD', 'GBP', 'NZD', 'CAD'];
 
@@ -24,6 +25,7 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
   const [status, setStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [errorMsg, setErrorMsg] = useState('');
 
+  const canWrite = useCanWrite();
   const [setPricing] = useSetPlanPricingMutation();
 
   // Sync if existing data loads after mount (adjusted during render, not in an effect).
@@ -92,7 +94,7 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
         {status === 'saved' && (
           <span className="text-xs text-green-600 font-medium">Saved</span>
         )}
-        {!isFree && (
+        {!isFree && canWrite && (
           <button
             onClick={() => setExpanded((v) => !v)}
             className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
@@ -103,7 +105,7 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
       </div>
 
       {/* Expanded edit form */}
-      {expanded && (
+      {expanded && canWrite && (
         <div className="px-6 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="flex flex-col gap-1">
             <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Monthly Price</label>

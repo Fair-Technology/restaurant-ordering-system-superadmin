@@ -2,6 +2,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useGetShopUsageQuery, useReconcileShopUsageMutation } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
+import { WriteOnly } from '../auth/WriteOnly';
 
 export function ShopUsagePage() {
   const { shopId } = useParams<{ shopId: string }>();
@@ -62,13 +63,15 @@ export function ShopUsagePage() {
           </p>
         )}
 
-        <button
-          onClick={() => reconcile({ shopId: shopId! })}
-          disabled={isReconciling}
-          className="border border-indigo-300 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50 disabled:opacity-50 transition-colors"
-        >
-          {isReconciling ? 'Reconciling…' : 'Reconcile Now'}
-        </button>
+        <WriteOnly>
+          <button
+            onClick={() => reconcile({ shopId: shopId! })}
+            disabled={isReconciling}
+            className="border border-indigo-300 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50 disabled:opacity-50 transition-colors"
+          >
+            {isReconciling ? 'Reconciling…' : 'Reconcile Now'}
+          </button>
+        </WriteOnly>
       </div>
 
       <div className="glass-card p-6 space-y-4 mt-4">

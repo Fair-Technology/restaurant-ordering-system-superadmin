@@ -18,6 +18,7 @@ import {
   planOverrideError,
   type LimitKey,
 } from './subscription-override';
+import { WriteOnly } from '../auth/WriteOnly';
 
 const STATUS_COLORS: Record<string, string> = {
   free: 'bg-gray-100 text-gray-600',
@@ -234,6 +235,7 @@ export function ShopSubscriptionPage() {
         </div>
 
         {/* Override form */}
+        <WriteOnly>
         <div className="glass-card p-5 space-y-4">
           <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Manual Override</p>
 
@@ -280,14 +282,18 @@ export function ShopSubscriptionPage() {
           {overrideError && <p className="text-red-500 text-sm">{overrideError}</p>}
           {overrideSuccess && !applyingOverride && <p className="text-green-600 text-sm">Override applied successfully.</p>}
 
-          <button
-            onClick={handleOverride}
-            disabled={applyingOverride}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {applyingOverride ? 'Applying…' : 'Apply Override'}
-          </button>
+          <WriteOnly>
+            <button
+              onClick={handleOverride}
+              disabled={applyingOverride}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {applyingOverride ? 'Applying…' : 'Apply Override'}
+            </button>
+          </WriteOnly>
         </div>
+
+        </WriteOnly>
 
         {/* Limit override */}
         <div className="glass-card p-5 space-y-4 lg:col-span-2">
@@ -314,18 +320,21 @@ export function ShopSubscriptionPage() {
               {!entitlements.limitOverrideActive && (
                 <p className="text-xs text-red-600">This override has expired and is no longer applied.</p>
               )}
-              <button
-                onClick={handleClearLimit}
-                disabled={clearingLimit || settingLimit}
-                className="border border-red-300 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
-              >
-                {clearingLimit ? 'Removing…' : 'Remove'}
-              </button>
+              <WriteOnly>
+                <button
+                  onClick={handleClearLimit}
+                  disabled={clearingLimit || settingLimit}
+                  className="border border-red-300 text-red-600 px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-50 disabled:opacity-50 transition-colors"
+                >
+                  {clearingLimit ? 'Removing…' : 'Remove'}
+                </button>
+              </WriteOnly>
             </div>
           ) : (
             <p className="text-sm text-gray-500">No limit override. This restaurant follows its plan.</p>
           )}
 
+          <WriteOnly>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limit</label>
@@ -377,13 +386,16 @@ export function ShopSubscriptionPage() {
             </p>
           )}
 
-          <button
-            onClick={handleSetLimit}
-            disabled={settingLimit || clearingLimit}
-            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-          >
-            {settingLimit ? 'Saving…' : 'Set Limit Override'}
-          </button>
+          <WriteOnly>
+            <button
+              onClick={handleSetLimit}
+              disabled={settingLimit || clearingLimit}
+              className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            >
+              {settingLimit ? 'Saving…' : 'Set Limit Override'}
+            </button>
+          </WriteOnly>
+          </WriteOnly>
         </div>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { useGetPlanQuery, useUpdatePlanMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
 import type { PlanLimit } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
 const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'];
 
@@ -79,7 +80,8 @@ export function EditPlanPage() {
         <h1 className="text-2xl font-semibold text-indigo-900">Edit Plan</h1>
       </div>
 
-      <div className="glass-card p-6 space-y-5">
+      <div className="glass-card p-6">
+      <WriteFieldset className="space-y-5">
         <div className="flex flex-col gap-1.5">
           <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Name</label>
           <input
@@ -119,12 +121,14 @@ export function EditPlanPage() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limits</p>
-            <button
-              onClick={addLimit}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-            >
-              + Add Limit
-            </button>
+            <WriteOnly>
+              <button
+                onClick={addLimit}
+                className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+              >
+                + Add Limit
+              </button>
+            </WriteOnly>
           </div>
           {limits.length === 0 && (
             <p className="text-gray-400 text-xs">No limits — plan is unrestricted.</p>
@@ -147,12 +151,14 @@ export function EditPlanPage() {
                 min="-1"
                 className="w-24 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
               />
-              <button
-                onClick={() => removeLimit(idx)}
-                className="text-red-500 hover:text-red-700 text-xs font-medium transition-colors"
-              >
-                ✕
-              </button>
+              <WriteOnly>
+                <button
+                  onClick={() => removeLimit(idx)}
+                  className="text-red-500 hover:text-red-700 text-xs font-medium transition-colors"
+                >
+                  ✕
+                </button>
+              </WriteOnly>
             </div>
           ))}
           <p className="text-gray-400 text-xs">-1 = unlimited</p>
@@ -161,13 +167,16 @@ export function EditPlanPage() {
         {error && <p className="text-red-500 text-sm">{error}</p>}
         {saved && <p className="text-green-600 text-sm">Saved successfully.</p>}
 
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-        >
-          {isSaving ? 'Saving…' : 'Save Changes'}
-        </button>
+        <WriteOnly>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            {isSaving ? 'Saving…' : 'Save Changes'}
+          </button>
+        </WriteOnly>
+      </WriteFieldset>
       </div>
     </div>
   );

@@ -4,6 +4,7 @@ import { apiErrorMessage } from '../utils/apiError';
 import type { AllergenDef, FulfilmentMode, ReferenceListsResultDto, TaxRateRow } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
+import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
 /** Common shape of allergen, additive and tax-class rows. */
 type ReferenceEntry = Pick<AllergenDef, 'id' | 'labels' | 'isActive'>;
@@ -127,7 +128,7 @@ function ReferenceListsEditor({
   }
 
   return (
-    <div className="space-y-6">
+    <WriteFieldset className="space-y-6">
       <p className="text-xs text-gray-500">
         {data.updatedAt ? `Last changed ${new Date(data.updatedAt).toLocaleString()}` : 'No changes yet.'}
       </p>
@@ -187,18 +188,20 @@ function ReferenceListsEditor({
 
       <TaxRatesSection taxRates={draft.taxRates} taxClasses={draft.taxClasses} onAdd={addTaxRates} />
 
-      <div className="glass-card px-6 py-4 flex items-center gap-4">
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
-        >
-          {isSaving ? 'Saving…' : 'Save lists'}
-        </button>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        {saved && <p className="text-green-600 text-sm">Saved.</p>}
-      </div>
-    </div>
+      <WriteOnly>
+        <div className="glass-card px-6 py-4 flex items-center gap-4">
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+          >
+            {isSaving ? 'Saving…' : 'Save lists'}
+          </button>
+          {error && <p className="text-red-500 text-sm">{error}</p>}
+          {saved && <p className="text-green-600 text-sm">Saved.</p>}
+        </div>
+      </WriteOnly>
+    </WriteFieldset>
   );
 }
 
@@ -227,12 +230,14 @@ function EntryTable<T extends ReferenceEntry>({
     <div className="glass-card overflow-hidden">
       <div className="px-6 py-4 border-b border-white/30 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-indigo-900">{title}</h2>
-        <button
-          onClick={onAdd}
-          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-        >
-          + {addLabel}
-        </button>
+        <WriteOnly>
+          <button
+            onClick={onAdd}
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+          >
+            + {addLabel}
+          </button>
+        </WriteOnly>
       </div>
       <table className="w-full text-sm">
         <thead>
@@ -358,6 +363,7 @@ function TaxRatesSection({
         </tbody>
       </table>
 
+      <WriteOnly>
       <div className="px-6 py-4 border-t border-white/30 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-500">Class</label>
@@ -412,6 +418,7 @@ function TaxRatesSection({
           + Add rate
         </button>
       </div>
+      </WriteOnly>
     </div>
   );
 }
