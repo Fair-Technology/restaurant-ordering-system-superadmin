@@ -4,61 +4,7 @@ import { useGetAuditEntriesQuery } from '../services/api';
 import type { AuditEntry } from '../services/api';
 import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
-
-const ENTITY_TYPE_LABELS: Record<string, string> = {
-  product: 'Product',
-  category: 'Category',
-  shop: 'Shop',
-  staff: 'Staff',
-  subscription: 'Subscription',
-  customer: 'Customer',
-  order: 'Order',
-};
-
-const ENTITY_TYPE_COLORS: Record<string, string> = {
-  product: 'bg-blue-100 text-blue-700',
-  category: 'bg-green-100 text-green-700',
-  shop: 'bg-purple-100 text-purple-700',
-  staff: 'bg-orange-100 text-orange-700',
-  subscription: 'bg-pink-100 text-pink-700',
-  customer: 'bg-teal-100 text-teal-700',
-  order: 'bg-amber-100 text-amber-700',
-};
-
-const ACTION_LABELS: Record<string, string> = {
-  'product.create': 'created product',
-  'product.update': 'updated product',
-  'product.delete': 'deleted product',
-  'category.create': 'created category',
-  'category.update': 'updated category',
-  'category.delete': 'deleted category',
-  'shop.update': 'updated shop',
-  'shop.logo': 'updated shop logo',
-  'shop.legal_update': 'updated legal pages',
-  'shop.dpa_accept': 'accepted the data processing agreement',
-  'shop.data_export': 'exported restaurant data',
-  'customer.erase': 'anonymised a customer',
-  'shop.order_settings_update': 'updated order settings',
-  'shop.busy_mode': 'switched busy mode',
-  'shop.cover_image': 'updated cover image',
-  'shop.cover_image_remove': 'removed cover image',
-  'order.refund': 'refunded an order',
-  'promotion.code_create': 'created a discount code',
-  'promotion.code_update': 'switched a discount code on or off',
-  'promotion.loyalty_update': 'changed the loyalty vouchers',
-  'combo.create': 'created a combo',
-  'combo.update': 'changed a combo',
-  'subscription.override': 'changed the plan by hand',
-  'subscription.cancelScheduled': 'scheduled a downgrade to the free plan',
-  'subscription.cancelResumed': 'kept the paid plan',
-  'subscription.limit_override': 'changed a plan limit for this restaurant',
-  'subscription.limit_override_clear': "removed the restaurant's limit override",
-  'subscription.upgrade': 'upgraded the plan',
-  'subscription.change_scheduled': 'scheduled a downgrade',
-  'subscription.change_cancelled': 'cancelled a scheduled downgrade',
-  'subscription.payment_retried': 'paid an overdue invoice',
-  'subscription.override_expired': 'manual plan expired',
-};
+import { ENTITY_TYPE_COLORS, ENTITY_TYPE_LABELS, actionLabel, entityTypeLabel } from './shop-activity-labels';
 
 const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order'] as const;
 
@@ -69,11 +15,11 @@ function formatValue(v: unknown): string {
   return String(v);
 }
 
-function AuditEntryCard({ entry, actorLabel }: { entry: AuditEntry; actorLabel: string }) {
+export function AuditEntryCard({ entry, actorLabel }: { entry: AuditEntry; actorLabel: string }) {
   const [expanded, setExpanded] = useState(false);
-  const actionLabel = ACTION_LABELS[entry.action] ?? entry.action;
+  const actionText = actionLabel(entry.action);
   const badgeClass = ENTITY_TYPE_COLORS[entry.entityType] ?? 'bg-gray-100 text-gray-700';
-  const badgeLabel = ENTITY_TYPE_LABELS[entry.entityType] ?? entry.entityType;
+  const badgeLabel = entityTypeLabel(entry.entityType);
   const hasDetails = entry.changes && entry.changes.length > 0;
 
   return (
@@ -86,7 +32,7 @@ function AuditEntryCard({ entry, actorLabel }: { entry: AuditEntry; actorLabel: 
           <div className="min-w-0">
             <p className="text-sm text-gray-700">
               <span className="font-medium text-indigo-900">{actorLabel}</span>{' '}
-              {actionLabel}{' '}
+              {actionText}{' '}
               <span className="font-semibold text-indigo-800">{entry.entityName}</span>
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
