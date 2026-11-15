@@ -4,6 +4,8 @@ import {
   ALREADY_DECIDED_MESSAGE,
   CONTENT_REPORT_PAGE_SIZE,
   DECISION_REASON_MAX,
+  EMPTY_FILTER_MESSAGE,
+  EMPTY_PAST_END_MESSAGE,
   STATUS_FILTERS,
   categoryLabel,
   decisionErrorMessage,
@@ -11,6 +13,7 @@ import {
   hasMorePages,
   isAlreadyDecidedError,
   isDecided,
+  isEmptyPastEnd,
   statusBadgeClass,
   statusLabel,
   validateDecisionReason,
@@ -46,6 +49,24 @@ describe('categoryLabel', () => {
       'Personal data',
       'Other',
     ]);
+  });
+});
+
+describe('out-of-enum values', () => {
+  // Reachable only if the stored enum and the client drift — a blank cell hides the report.
+  it('falls back to the raw value rather than an empty string', () => {
+    expect(categoryLabel('does_not_exist')).toBe('does_not_exist');
+    expect(statusLabel('bogus_status')).toBe('bogus_status');
+  });
+
+  it('gives an unknown status a neutral badge class', () => {
+    expect(statusBadgeClass('bogus_status')).toMatch(/bg-\S+ text-\S+/);
+  });
+
+  it('reads an empty or non-string value as Unknown', () => {
+    expect(categoryLabel('')).toBe('Unknown');
+    expect(statusLabel('   ')).toBe('Unknown');
+    expect(statusLabel(undefined as unknown as string)).toBe('Unknown');
   });
 });
 
@@ -124,6 +145,23 @@ describe('hasMorePages', () => {
     expect(hasMorePages(Array.from({ length: CONTENT_REPORT_PAGE_SIZE - 1 }))).toBe(false);
     expect(hasMorePages([])).toBe(false);
     expect(hasMorePages(Array.from({ length: 5 }), 5)).toBe(true);
+  });
+});
+
+describe('isEmptyPastEnd', () => {
+  it('is the past-the-end state only on a later page with no rows', () => {
+    expect(isEmptyPastEnd(0, 2)).toBe(true);
+    expect(isEmptyPastEnd(0, 5)).toBe(true);
+  });
+
+  it('is false for a genuinely empty filter (page 1) and for any page with rows', () => {
+    expect(isEmptyPastEnd(0, 1)).toBe(false);
+    expect(isEmptyPastEnd(CONTENT_REPORT_PAGE_SIZE, 1)).toBe(false);
+    expect(isEmptyPastEnd(CONTENT_REPORT_PAGE_SIZE, 3)).toBe(false);
+  });
+
+  it('keeps the two empty states distinct', () => {
+    expect(EMPTY_FILTER_MESSAGE).not.toBe(EMPTY_PAST_END_MESSAGE);
   });
 });
 

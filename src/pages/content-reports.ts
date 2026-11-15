@@ -42,11 +42,27 @@ const CATEGORY_LABELS: Record<ContentReportCategory, string> = {
   other: 'Other',
 };
 
-export const statusLabel = (status: ContentReportStatus): string => STATUS_LABELS[status];
+/** Neutral badge for a status the client doesn't recognise (enum drift). */
+const UNKNOWN_STATUS_BADGE = 'bg-gray-100 text-gray-600';
 
-export const statusBadgeClass = (status: ContentReportStatus): string => STATUS_BADGE[status];
+const hasOwn = (table: object, key: string): boolean =>
+  Object.prototype.hasOwnProperty.call(table, key);
 
-export const categoryLabel = (category: ContentReportCategory): string => CATEGORY_LABELS[category];
+const lookup = (table: Record<string, string>, key: string): string | undefined =>
+  hasOwn(table, key) ? table[key] : undefined;
+
+/** A stored value the client can't map is shown as-is — never as a blank cell. */
+const rawOrUnknown = (value: unknown): string =>
+  typeof value === 'string' && value.trim() !== '' ? value : 'Unknown';
+
+export const statusLabel = (status: ContentReportStatus | string): string =>
+  lookup(STATUS_LABELS, status) ?? rawOrUnknown(status);
+
+export const statusBadgeClass = (status: ContentReportStatus | string): string =>
+  lookup(STATUS_BADGE, status) ?? UNKNOWN_STATUS_BADGE;
+
+export const categoryLabel = (category: ContentReportCategory | string): string =>
+  lookup(CATEGORY_LABELS, category) ?? rawOrUnknown(category);
 
 /** A report is undecided only while its status is 'received'. */
 export const isDecided = (report: Pick<ContentReport, 'status'>): boolean => report.status !== 'received';
@@ -74,6 +90,19 @@ export function validateDecisionReason(reason: string): string | null {
 export function hasMorePages(reports: readonly unknown[], pageSize: number = CONTENT_REPORT_PAGE_SIZE): boolean {
   return reports.length >= pageSize;
 }
+
+/** Shown when page 1 comes back empty — the selected filter really has no reports. */
+export const EMPTY_FILTER_MESSAGE = 'No content reports for this filter.';
+
+/** Shown when a later page comes back empty — the operator just stepped past the end. */
+export const EMPTY_PAST_END_MESSAGE = 'No reports on this page.';
+
+/**
+ * The API sends no total, so a full last page still offers Next. Landing on an empty page past
+ * the end must not reuse the filter-empty copy: the filter does have reports, on an earlier page.
+ */
+export const isEmptyPastEnd = (reportCount: number, page: number): boolean =>
+  reportCount === 0 && page > 1;
 
 const RECEIVED_AT_FORMAT: Intl.DateTimeFormatOptions = {
   day: 'numeric',

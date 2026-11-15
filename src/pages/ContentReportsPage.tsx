@@ -16,6 +16,8 @@ import { buildSuperadminOfflineRequest } from './shops-list';
 import {
   CONTENT_REPORT_PAGE_SIZE,
   DECISION_REASON_MAX,
+  EMPTY_FILTER_MESSAGE,
+  EMPTY_PAST_END_MESSAGE,
   STATUS_FILTERS,
   categoryLabel,
   decisionErrorMessage,
@@ -23,6 +25,7 @@ import {
   hasMorePages,
   isAlreadyDecidedError,
   isDecided,
+  isEmptyPastEnd,
   statusBadgeClass,
   statusLabel,
   validateDecisionReason,
@@ -232,7 +235,18 @@ export function ContentReportsPage() {
       {!isError && reports.length === 0 && (
         <div className="glass-card p-12 text-center">
           <Flag className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-          <p className="text-sm text-gray-500">No content reports for this filter.</p>
+          <p className="text-sm text-gray-500">
+            {isEmptyPastEnd(reports.length, page) ? EMPTY_PAST_END_MESSAGE : EMPTY_FILTER_MESSAGE}
+          </p>
+          {isEmptyPastEnd(reports.length, page) && (
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="mt-4 px-3 py-1.5 text-sm rounded-lg border border-white/40 bg-white/60 hover:bg-white/80 transition-colors"
+            >
+              Back to the previous page
+            </button>
+          )}
         </div>
       )}
 
