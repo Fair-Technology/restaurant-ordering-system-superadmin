@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { decideAccess, type AccessInput } from './access';
 
-const settled: AccessInput = { msalSettled: true, isAuthenticated: true, profileLoading: false, profile: { systemRole: 'superadmin' } };
+const settled: AccessInput = { msalSettled: true, isAuthenticated: true, profileLoading: false, profileError: false, profile: { systemRole: 'superadmin' } };
 
 describe('decideAccess — the superadmin route gate', () => {
   it('grants a signed-in superadmin', () => {
@@ -32,8 +32,23 @@ describe('decideAccess — the superadmin route gate', () => {
     expect(decideAccess({ ...settled, profileLoading: true })).toBe('loading-profile');
   });
 
-  it('fails closed when /users/me returned nothing (e.g. a 401/403): no access, keeps waiting', () => {
-    // Current behaviour: the user sees the loading screen indefinitely rather than an error.
-    expect(decideAccess({ ...settled, profile: undefined })).toBe('loading-profile');
+  it('shows an error (not a permanent loading state) when /users/me returned nothing', () => {
+    expect(decideAccess({ ...settled, profile: undefined, profileError: false })).toBe('profile-error');
+  });
+
+  it('still waits while the profile is loading', () => {
+    expect(decideAccess({ ...settled, profile: undefined, profileLoading: true, profileError: false })).toBe(
+      'loading-profile',
+    );
+  });
+
+  it('reports profile-error when the /users/me query failed', () => {
+    expect(decideAccess({ ...settled, profile: undefined, profileError: true, profileLoading: false })).toBe(
+      'profile-error',
+    );
+  });
+
+  it('never grants off stale profile data when the query errored', () => {
+    expect(decideAccess({ ...settled, profileError: true })).toBe('profile-error');
   });
 });
