@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+# Pre-push backstop for rs-superadmin.
+#
+# This project merges LOCALLY and opens no pull requests, so this hook is the
+# pre-merge gate a PR used to provide. It must stay fast: it runs on every push,
+# including the bots'.
+#
+#   Emergency bypass:  SKIP_GUARD=1 git push
+#
+if [ "${SKIP_GUARD:-}" = "1" ]; then
+  echo "[pre-push] rs-superadmin: guard skipped (SKIP_GUARD=1)"
+  exit 0
+fi
+
+echo "[pre-push] rs-superadmin: typecheck..."
+npm run --silent typecheck || { echo "[pre-push] rs-superadmin: TYPECHECK FAILED -> push blocked."; echo "[pre-push] fix it, or bypass with SKIP_GUARD=1 git push"; exit 1; }
+echo "[pre-push] rs-superadmin: lint..."
+npm run --silent lint || { echo "[pre-push] rs-superadmin: LINT FAILED -> push blocked."; echo "[pre-push] fix it, or bypass with SKIP_GUARD=1 git push"; exit 1; }
+echo "[pre-push] rs-superadmin: all guards passed."
