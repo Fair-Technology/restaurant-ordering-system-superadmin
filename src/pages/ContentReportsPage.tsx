@@ -54,7 +54,7 @@ export function ContentReportsPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
 
-  const { data: shopsData } = useGetShopsQuery();
+  const { data: shopsData, isLoading: shopsLoading, isError: shopsError } = useGetShopsQuery();
   const [setSuperadminOffline, { isLoading: isSettingOffline }] =
     useSetShopOfflineBySuperadminMutation();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -346,6 +346,11 @@ export function ContentReportsPage() {
               <p className="text-sm text-gray-700 whitespace-pre-wrap">{selected.reason}</p>
             </div>
 
+            {/* Outside the isDecided ternary: the follow-up refetch that follows a 409 unmounts the
+                decision form, so feedback rendered inside it would flash and vanish. */}
+            {formError && <p className="text-sm text-red-500 mb-4">{formError}</p>}
+            {notice && <p className="text-sm text-green-600 mb-4">{notice}</p>}
+
             {isDecided(selected) ? (
               <div className="mb-6 rounded-lg border border-white/40 bg-white/50 p-4">
                 <h3 className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">
@@ -407,8 +412,6 @@ export function ContentReportsPage() {
                     className="mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   />
                 </label>
-                {formError && <p className="text-sm text-red-500 mb-3">{formError}</p>}
-                {notice && <p className="text-sm text-green-600 mb-3">{notice}</p>}
                 <WriteOnly>
                   <button
                     onClick={() => handleSubmit(selected)}
@@ -491,6 +494,16 @@ export function ContentReportsPage() {
                       </div>
                     </div>
                   )}
+                </>
+              ) : shopsLoading || shopsError ? (
+                <>
+                  <p className="text-sm text-gray-500 mb-2">Checking the storefront…</p>
+                  <Link
+                    to="/shops"
+                    className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                  >
+                    Open in Shops
+                  </Link>
                 </>
               ) : (
                 <>
