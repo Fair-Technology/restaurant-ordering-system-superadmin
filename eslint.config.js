@@ -8,7 +8,9 @@ import { defineConfig, globalIgnores } from 'eslint/config'
 export default defineConfig([
   // `src/services/api.ts` is generated (see openapi/rtk-query.config.cjs) and is rewritten
   // wholesale on every regeneration, so it is not linted: any fix here would be lost.
-  globalIgnores(['dist', 'src/services/api.ts']),
+  // `.harness` is the local browser-verification harness (stub MSAL, stub API, Playwright script),
+  // not application code, so it is not linted.
+  globalIgnores(['dist', 'src/services/api.ts', '.harness']),
   {
     files: ['**/*.{ts,tsx}'],
     extends: [

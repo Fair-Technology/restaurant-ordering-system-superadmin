@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   useDecideContentReportMutation,
@@ -41,6 +41,10 @@ export function ContentReportsPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // The dialog is a real modal: it takes focus on open, traps Tab, closes on Escape and returns
+  // focus to the row that opened it. Kept as refs because none of this belongs in render state.
+  const dialogRef = useRef<HTMLDivElement | null>(null);
+  const triggerRef = useRef<HTMLElement | null>(null);
 
   const { data, isLoading, isError, refetch } = useListContentReportsQuery({
     status: statusFilter,
@@ -77,7 +81,8 @@ export function ContentReportsPage() {
     setOfflineError(null);
   };
 
-  const selectReport = (id: string) => {
+  const selectReport = (id: string, trigger?: HTMLElement | null) => {
+    triggerRef.current = trigger ?? (document.activeElement as HTMLElement | null);
     setSelectedId(id);
     resetDetail();
   };
@@ -85,6 +90,47 @@ export function ContentReportsPage() {
   const closeDetail = () => {
     setSelectedId(null);
     resetDetail();
+    triggerRef.current?.focus();
+    triggerRef.current = null;
+  };
+
+  useEffect(() => {
+    if (selectedId) dialogRef.current?.focus();
+  }, [selectedId]);
+
+  const handleDialogKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === 'Escape') {
+      event.stopPropagation();
+      closeDetail();
+      return;
+    }
+    if (event.key !== 'Tab') return;
+    const root = dialogRef.current;
+    if (!root) return;
+    const focusable = Array.from(
+      root.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      ),
+    ).filter((el) => el.offsetParent !== null);
+    if (focusable.length === 0) {
+      event.preventDefault();
+      return;
+    }
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    const active = document.activeElement as HTMLElement | null;
+    if (!active || !root.contains(active)) {
+      event.preventDefault();
+      first.focus();
+      return;
+    }
+    if (event.shiftKey && active === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && active === last) {
+      event.preventDefault();
+      first.focus();
+    }
   };
 
   const changeFilter = (value: StatusFilter) => {
@@ -162,6 +208,8 @@ export function ContentReportsPage() {
           {STATUS_FILTERS.map((filter) => (
             <button
               key={filter.value || 'all'}
+              type="button"
+              aria-pressed={statusFilter === filter.value}
               onClick={() => changeFilter(filter.value)}
               className={`px-3 py-1.5 text-xs font-medium rounded-lg border transition-colors ${
                 statusFilter === filter.value
@@ -193,19 +241,19 @@ export function ContentReportsPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/30">
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Shop
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Category
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
+                <th scope="col" className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden md:table-cell">
                   Received
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th scope="col" className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
+                <th scope="col" className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider hidden lg:table-cell">
                   Decision
                 </th>
               </tr>
@@ -214,8 +262,16 @@ export function ContentReportsPage() {
               {reports.map((report) => (
                 <tr
                   key={report.id}
-                  onClick={() => selectReport(report.id)}
-                  className={`cursor-pointer hover:bg-white/20 transition-colors ${
+                  tabIndex={0}
+                  aria-label={`Open report from ${report.shopName}`}
+                  onClick={(event) => selectReport(report.id, event.currentTarget)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' || event.key === ' ') {
+                      event.preventDefault();
+                      selectReport(report.id, event.currentTarget);
+                    }
+                  }}
+                  className={`cursor-pointer hover:bg-white/20 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 ${
                     report.id === selectedId ? 'bg-white/30' : ''
                   }`}
                 >
@@ -281,10 +337,13 @@ export function ContentReportsPage() {
           onClick={closeDetail}
         >
           <div
+            ref={dialogRef}
             role="dialog"
             aria-modal="true"
             aria-labelledby="report-title"
-            className="glass-card bg-white p-6 w-full max-w-2xl my-8"
+            tabIndex={-1}
+            onKeyDown={handleDialogKeyDown}
+            className="glass-card bg-white p-6 w-full max-w-2xl my-8 focus:outline-none"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-start justify-between gap-4 mb-4">
@@ -348,8 +407,14 @@ export function ContentReportsPage() {
 
             {/* Outside the isDecided ternary: the follow-up refetch that follows a 409 unmounts the
                 decision form, so feedback rendered inside it would flash and vanish. */}
-            {formError && <p className="text-sm text-red-500 mb-4">{formError}</p>}
-            {notice && <p className="text-sm text-green-600 mb-4">{notice}</p>}
+            {formError && (
+              <p role="alert" className="text-sm text-red-500 mb-4">
+                {formError}
+              </p>
+            )}
+            <p role="status" aria-live="polite" className="text-sm text-green-600 mb-4">
+              {notice ?? ''}
+            </p>
 
             {isDecided(selected) ? (
               <div className="mb-6 rounded-lg border border-white/40 bg-white/50 p-4">
@@ -475,7 +540,11 @@ export function ContentReportsPage() {
                           />
                         </label>
                       )}
-                      {offlineError && <p className="text-sm text-red-500 mb-3">{offlineError}</p>}
+                      {offlineError && (
+                        <p role="alert" className="text-sm text-red-500 mb-3">
+                          {offlineError}
+                        </p>
+                      )}
                       <div className="flex justify-end gap-2">
                         <button
                           onClick={closeOfflineConfirm}
