@@ -37,6 +37,7 @@ const ACTION_LABELS: Record<string, string> = {
   'shop.legal_update': 'updated legal pages',
   'shop.dpa_accept': 'accepted the data processing agreement',
   'shop.data_export': 'exported restaurant data',
+  'shop.invoice_archive': 'downloaded a month of invoices',
   'customer.erase': 'anonymised a customer',
   'shop.order_settings_update': 'updated order settings',
   'shop.busy_mode': 'switched busy mode',
