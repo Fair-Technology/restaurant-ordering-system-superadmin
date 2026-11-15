@@ -5,6 +5,7 @@ export const addTagTypes = [
   "Reports",
   "Plans",
   "Platform",
+  "Content Reports",
   "Reference Lists",
   "Products",
   "Shops",
@@ -123,7 +124,12 @@ const injectedRtkApi = api
         invalidatesTags: ["Plans"],
       }),
       getPlans: build.query<GetPlansApiResponse, GetPlansApiArg>({
-        query: () => ({ url: `/plans` }),
+        query: (queryArg) => ({
+          url: `/plans`,
+          params: {
+            includeHidden: queryArg.includeHidden,
+          },
+        }),
         providesTags: ["Plans"],
       }),
       getPlan: build.query<GetPlanApiResponse, GetPlanApiArg>({
@@ -173,6 +179,31 @@ const injectedRtkApi = api
           body: queryArg.updateSystemConfigRequestDto,
         }),
         invalidatesTags: ["Platform"],
+      }),
+      listContentReports: build.query<
+        ListContentReportsApiResponse,
+        ListContentReportsApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/platform/content-reports`,
+          params: {
+            status: queryArg.status,
+            page: queryArg.page,
+            pageSize: queryArg.pageSize,
+          },
+        }),
+        providesTags: ["Content Reports"],
+      }),
+      decideContentReport: build.mutation<
+        DecideContentReportApiResponse,
+        DecideContentReportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/platform/content-reports/${queryArg.reportId}/decision`,
+          method: "POST",
+          body: queryArg.decideContentReportBody,
+        }),
+        invalidatesTags: ["Content Reports"],
       }),
       getPlatformLegalIdentity: build.query<
         GetPlatformLegalIdentityApiResponse,
@@ -251,6 +282,7 @@ const injectedRtkApi = api
           url: `/products`,
           params: {
             shopId: queryArg.shopId,
+            includeUncategorized: queryArg.includeUncategorized,
           },
         }),
         providesTags: ["Products"],
@@ -438,6 +470,17 @@ const injectedRtkApi = api
           body: queryArg.body,
         }),
         invalidatesTags: ["Combos"],
+      }),
+      submitContentReport: build.mutation<
+        SubmitContentReportApiResponse,
+        SubmitContentReportApiArg
+      >({
+        query: (queryArg) => ({
+          url: `/shops/${queryArg.shopId}/content-reports`,
+          method: "POST",
+          body: queryArg.submitContentReportBody,
+        }),
+        invalidatesTags: ["Content Reports"],
       }),
       removeShopCoverImage: build.mutation<
         RemoveShopCoverImageApiResponse,
@@ -1096,8 +1139,12 @@ export type CreatePlanApiResponse =
 export type CreatePlanApiArg = {
   createPlanRequestDto: CreatePlanRequestDto;
 };
-export type GetPlansApiResponse = /** status 200 Success */ GetPlansResultDto;
-export type GetPlansApiArg = void;
+export type GetPlansApiResponse =
+  /** status 200 Plans retrieved successfully */ GetPlansResultDto;
+export type GetPlansApiArg = {
+  /** Platform operators only: include plans hidden from the customer selector. */
+  includeHidden?: boolean;
+};
 export type GetPlanApiResponse = /** status 200 Success */ GetPlanResultDto;
 export type GetPlanApiArg = {
   planId: string;
@@ -1126,6 +1173,19 @@ export type UpdateSystemConfigApiResponse =
   /** status 200 Success */ UpdateSystemConfigResultDto;
 export type UpdateSystemConfigApiArg = {
   updateSystemConfigRequestDto: UpdateSystemConfigRequestDto;
+};
+export type ListContentReportsApiResponse =
+  /** status 200 Content reports */ ContentReport[];
+export type ListContentReportsApiArg = {
+  status?: ContentReportStatus | string;
+  page?: number;
+  pageSize?: number;
+};
+export type DecideContentReportApiResponse =
+  /** status 200 Decision recorded */ ContentReport;
+export type DecideContentReportApiArg = {
+  reportId: string;
+  decideContentReportBody: DecideContentReportBody;
 };
 export type GetPlatformLegalIdentityApiResponse =
   /** status 200 Success */ PlatformLegalIdentityDto;
@@ -1169,6 +1229,8 @@ export type GetProductsByShopApiResponse =
 export type GetProductsByShopApiArg = {
   /** Shop ID to filter products */
   shopId: string;
+  /** Include products that have no category (e.g. dishes created by the bulk menu import) */
+  includeUncategorized?: boolean;
 };
 export type DeleteProductApiResponse =
   /** status 200 Product deleted successfully */ DeleteProductResultDto;
@@ -1374,6 +1436,12 @@ export type UpdateComboApiArg = {
   body: {
     [key: string]: any;
   };
+};
+export type SubmitContentReportApiResponse =
+  /** status 200 Report received */ SubmitContentReportResultDto;
+export type SubmitContentReportApiArg = {
+  shopId: string;
+  submitContentReportBody: SubmitContentReportBody;
 };
 export type RemoveShopCoverImageApiResponse =
   /** status 200 Shop cover image removed successfully */ ShopCoverImageResultDto;
@@ -2222,6 +2290,38 @@ export type UpdateSystemConfigResultDto = {
 export type UpdateSystemConfigRequestDto = {
   maxShopsDefault: number;
 };
+export type ContentReportCategory =
+  | "illegal_goods"
+  | "fraud_or_scam"
+  | "hate_or_harassment"
+  | "copyright_or_trademark"
+  | "personal_data"
+  | "other";
+export type ContentReportStatus = "received" | "actioned" | "dismissed";
+export type ContentReportDecision = {
+  decision: "actioned" | "dismissed";
+  reason: string;
+  decidedBy: string;
+  decidedAt: string;
+};
+export type ContentReport = {
+  id: string;
+  shopId: string;
+  shopSlug: string;
+  shopName: string;
+  category: ContentReportCategory;
+  reason: string;
+  contentUrl?: string;
+  reporterName?: string;
+  reporterEmail?: string;
+  status: ContentReportStatus;
+  receivedAt: string;
+  decision?: ContentReportDecision;
+};
+export type DecideContentReportBody = {
+  decision: "actioned" | "dismissed";
+  reason: string;
+};
 export type PlatformLegalIdentityDto = {
   platformName: string;
   salesSiteUrl: string | null;
@@ -3001,6 +3101,18 @@ export type ComboDto = {
   }[];
   createdAt: string;
   updatedAt: string;
+};
+export type SubmitContentReportResultDto = {
+  reportId: string;
+  status: ContentReportStatus;
+  receivedAt: string;
+};
+export type SubmitContentReportBody = {
+  category: ContentReportCategory;
+  reason: string;
+  contentUrl?: string;
+  reporterName?: string;
+  reporterEmail?: string;
 };
 export type ShopCoverImageResultDto = {
   id: string;
@@ -4043,6 +4155,9 @@ export const {
   useGetSystemConfigQuery,
   useLazyGetSystemConfigQuery,
   useUpdateSystemConfigMutation,
+  useListContentReportsQuery,
+  useLazyListContentReportsQuery,
+  useDecideContentReportMutation,
   useGetPlatformLegalIdentityQuery,
   useLazyGetPlatformLegalIdentityQuery,
   useUpdatePlatformLegalIdentityMutation,
@@ -4084,6 +4199,7 @@ export const {
   useGetCombosQuery,
   useLazyGetCombosQuery,
   useUpdateComboMutation,
+  useSubmitContentReportMutation,
   useRemoveShopCoverImageMutation,
   useSetShopCoverImageMutation,
   useGenerateShopCoverImageUploadUrlMutation,

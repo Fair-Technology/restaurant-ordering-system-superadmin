@@ -9,7 +9,7 @@ import { useCanWrite } from '../auth/platformAccess';
 
 export function PlansPage() {
   const canWrite = useCanWrite();
-  const { data, isLoading, isError } = useGetPlansQuery();
+  const { data, isLoading, isError } = useGetPlansQuery({});
   const [createPlan, { isLoading: isCreating }] = useCreatePlanMutation();
 
   const [showCreate, setShowCreate] = useState(false);

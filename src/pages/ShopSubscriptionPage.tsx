@@ -32,7 +32,7 @@ export function ShopSubscriptionPage() {
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, isError, isFetching } = useGetShopSubscriptionQuery({ shopId: shopId! });
-  const { data: plansData } = useGetPlansQuery();
+  const { data: plansData } = useGetPlansQuery({});
   const [override, { isLoading: isOverriding }] = useOverrideShopSubscriptionMutation();
 
   const [selectedPlanId, setSelectedPlanId] = useState('');
