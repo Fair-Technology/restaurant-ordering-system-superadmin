@@ -19,3 +19,6 @@ npm-debug.log*
 
 # OS
 .DS_Store
+
+# Local browser-verification harness (stub API + Playwright script)
+.harness/

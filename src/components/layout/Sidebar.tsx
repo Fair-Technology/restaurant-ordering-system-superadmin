@@ -13,6 +13,7 @@ import {
   Scale,
   AlertTriangle,
   ShieldAlert,
+  X,
 } from 'lucide-react';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -22,7 +23,13 @@ const navLinkClass = ({ isActive }: { isActive: boolean }) =>
       : 'text-gray-500 hover:text-indigo-800 hover:bg-white/40'
   }`;
 
-export function Sidebar() {
+type SidebarProps = {
+  /** Drawer state below the `md` breakpoint. Ignored from `md` up, where the sidebar is always shown. */
+  open?: boolean;
+  onClose?: () => void;
+};
+
+export function Sidebar({ open = false, onClose }: SidebarProps) {
   const { accounts, instance } = useMsal();
   const account = accounts[0];
   const shopMatch = useMatch('/shops/:shopId/*');
@@ -33,25 +40,38 @@ export function Sidebar() {
   };
 
   return (
-    <aside className="w-56 flex-shrink-0 flex flex-col glass-card rounded-none border-r border-white/30 min-h-screen sticky top-0">
+    <aside
+      className={`w-56 flex-shrink-0 flex flex-col glass-card rounded-none border-r border-white/30 min-h-screen
+        fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 overflow-y-auto
+        md:static md:z-auto md:translate-x-0 md:sticky md:top-0 md:overflow-visible
+        ${open ? 'translate-x-0' : '-translate-x-full'}`}
+    >
       {/* Logo */}
       <div className="flex items-center gap-2 px-4 py-4 border-b border-white/30">
         <ShieldCheck className="w-5 h-5 text-purple-600" />
         <span className="font-semibold text-indigo-900 text-sm">Superadmin</span>
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close navigation"
+          className="ml-auto md:hidden p-1 rounded text-gray-500 hover:text-indigo-800 hover:bg-white/40"
+        >
+          <X className="w-4 h-4" />
+        </button>
       </div>
 
       {/* Nav */}
       <nav className="flex-1 px-3 py-4 flex flex-col gap-1">
-        <NavLink to="/" end className={navLinkClass}>
+        <NavLink to="/" end className={navLinkClass} onClick={onClose}>
           <LayoutDashboard className="w-4 h-4 flex-shrink-0" />
           Dashboard
         </NavLink>
-        <NavLink to="/shops" className={navLinkClass}>
+        <NavLink to="/shops" className={navLinkClass} onClick={onClose}>
           <Store className="w-4 h-4 flex-shrink-0" />
           Shops
         </NavLink>
         {shopId ? (
-          <NavLink to={`/shops/${shopId}/orders`} className={navLinkClass}>
+          <NavLink to={`/shops/${shopId}/orders`} className={navLinkClass} onClick={onClose}>
             <ShoppingBag className="w-4 h-4 flex-shrink-0" />
             Orders
           </NavLink>
@@ -61,31 +81,31 @@ export function Sidebar() {
             Orders
           </span>
         )}
-        <NavLink to="/rejection-watch" className={navLinkClass}>
+        <NavLink to="/rejection-watch" className={navLinkClass} onClick={onClose}>
           <AlertTriangle className="w-4 h-4 flex-shrink-0" />
           Decline watch
         </NavLink>
-        <NavLink to="/plans" className={navLinkClass}>
+        <NavLink to="/plans" className={navLinkClass} onClick={onClose}>
           <CreditCard className="w-4 h-4 flex-shrink-0" />
           Plans
         </NavLink>
-        <NavLink to="/role-permissions" className={navLinkClass}>
+        <NavLink to="/role-permissions" className={navLinkClass} onClick={onClose}>
           <Lock className="w-4 h-4 flex-shrink-0" />
           Roles
         </NavLink>
-        <NavLink to="/reference-lists" className={navLinkClass}>
+        <NavLink to="/reference-lists" className={navLinkClass} onClick={onClose}>
           <ListChecks className="w-4 h-4 flex-shrink-0" />
           Food &amp; tax lists
         </NavLink>
-        <NavLink to="/content-reports" className={navLinkClass}>
+        <NavLink to="/content-reports" className={navLinkClass} onClick={onClose}>
           <ShieldAlert className="w-4 h-4 flex-shrink-0" />
           Content reports
         </NavLink>
-        <NavLink to="/platform-legal" className={navLinkClass}>
+        <NavLink to="/platform-legal" className={navLinkClass} onClick={onClose}>
           <Scale className="w-4 h-4 flex-shrink-0" />
           Legal
         </NavLink>
-        <NavLink to="/name-change-requests" className={navLinkClass}>
+        <NavLink to="/name-change-requests" className={navLinkClass} onClick={onClose}>
           <FileEdit className="w-4 h-4 flex-shrink-0" />
           Name Changes
         </NavLink>
