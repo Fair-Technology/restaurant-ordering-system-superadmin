@@ -9,7 +9,8 @@ import { useCanWrite } from '../auth/platformAccess';
 
 export function PlansPage() {
   const canWrite = useCanWrite();
-  const { data, isLoading, isError } = useGetPlansQuery();
+  // Operators must see hidden plans here so the Visible/Hidden badge is reachable.
+  const { data, isLoading, isError } = useGetPlansQuery({ includeHidden: true });
   const [createPlan, { isLoading: isCreating }] = useCreatePlanMutation();
 
   const [showCreate, setShowCreate] = useState(false);
