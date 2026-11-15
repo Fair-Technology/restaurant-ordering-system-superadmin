@@ -16,11 +16,14 @@ import { NameChangeRequestsPage } from '../pages/NameChangeRequestsPage';
 import { RolePermissionsPage } from '../pages/RolePermissionsPage';
 import { ReferenceListsPage } from '../pages/ReferenceListsPage';
 import { PlatformLegalPage } from '../pages/PlatformLegalPage';
+import { NotFoundPage } from '../pages/NotFoundPage';
+import { RouteErrorPage } from '../pages/RouteErrorPage';
 
 export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginPage />,
+    errorElement: <RouteErrorPage />,
   },
   {
     path: '/',
@@ -29,6 +32,7 @@ export const router = createBrowserRouter([
         <Layout />
       </RequireAuth>
     ),
+    errorElement: <RouteErrorPage />,
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'shops', element: <ShopsPage /> },
@@ -44,6 +48,7 @@ export const router = createBrowserRouter([
       { path: 'reference-lists', element: <ReferenceListsPage /> },
       { path: 'platform-legal', element: <PlatformLegalPage /> },
       { path: 'name-change-requests', element: <NameChangeRequestsPage /> },
+      { path: '*', element: <NotFoundPage /> },
     ],
   },
 ]);
