@@ -2459,6 +2459,7 @@ export type ReferenceListsResultDto = {
 export type ShopPermission =
   | "view_orders"
   | "manage_menu"
+  | "manage_stock"
   | "manage_shop"
   | "manage_staff"
   | "manage_billing"

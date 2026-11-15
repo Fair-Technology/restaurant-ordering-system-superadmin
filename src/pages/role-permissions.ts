@@ -5,6 +5,7 @@ export const PERMISSION_ROWS: Array<{ key: ShopPermission; label: string }> = [
   { key: 'refund_orders', label: 'Refund orders' },
   { key: 'view_reports', label: 'View reports and takings' },
   { key: 'manage_menu', label: 'Edit menu and prices' },
+  { key: 'manage_stock', label: 'Mark dishes sold out for today (stock only)' },
   { key: 'manage_shop', label: 'Restaurant settings' },
   { key: 'manage_staff', label: 'Manage staff logins' },
   { key: 'manage_billing', label: 'Billing and payments' },

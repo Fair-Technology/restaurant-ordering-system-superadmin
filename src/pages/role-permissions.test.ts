@@ -45,4 +45,8 @@ describe('PERMISSION_ROWS', () => {
     expect(keys).toContain('refund_orders');
     expect(keys).toContain('manage_billing');
   });
+
+  it('offers the stock-only permission so a shop can grant it without menu rights', () => {
+    expect(PERMISSION_ROWS.map((r) => r.key)).toContain('manage_stock');
+  });
 });
