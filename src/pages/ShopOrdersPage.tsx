@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useGetOrdersByShopQuery } from '../services/api';
@@ -39,6 +40,7 @@ function statusBadgeClass(displayState: string) {
 const PAGE_SIZE = 20;
 
 export function ShopOrdersPage() {
+  usePageTitle('Orders');
   const { shopId } = useParams<{ shopId: string }>();
   const [page, setPage] = useState(1);
 

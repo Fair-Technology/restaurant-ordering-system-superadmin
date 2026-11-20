@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { useParams, Link, useLocation } from 'react-router-dom';
 import { useGetAuditEntriesQuery } from '../services/api';
@@ -77,6 +78,7 @@ export function AuditEntryCard({ entry, actorLabel }: { entry: AuditEntry; actor
 }
 
 export function ShopActivityPage() {
+  usePageTitle('Activity');
   const { shopId } = useParams<{ shopId: string }>();
   const location = useLocation();
   const shopName = (location.state as { shopName?: string })?.shopName ?? shopId;

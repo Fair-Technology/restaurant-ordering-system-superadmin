@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetPlanQuery, useUpdatePlanMutation } from '../services/api';
@@ -9,6 +10,7 @@ import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'];
 
 export function EditPlanPage() {
+  usePageTitle('Edit Plan');
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGetPlanQuery({ planId: planId! });

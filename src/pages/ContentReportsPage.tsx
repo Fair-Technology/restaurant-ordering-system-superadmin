@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -41,6 +42,7 @@ const STATUS_STYLE: Record<ShopStatusKind, string> = {
 };
 
 export function ContentReportsPage() {
+  usePageTitle('Content Reports');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('');
   const [page, setPage] = useState(1);
   const [selectedId, setSelectedId] = useState<string | null>(null);

@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetPlanPricingQuery, useGetPlanQuery, useSetPlanPricingMutation } from '../services/api';
@@ -166,6 +167,7 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
 }
 
 export function PlanPricingPage() {
+  usePageTitle('Plan Pricing');
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
   const { data: planData } = useGetPlanQuery({ planId: planId! });

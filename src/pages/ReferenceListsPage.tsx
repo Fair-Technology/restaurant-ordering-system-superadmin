@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { type ReactNode, useState } from 'react';
 import { useGetReferenceListsQuery, useUpdateReferenceListsMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
@@ -32,6 +33,7 @@ function toUpdateBody(data: ReferenceListsResultDto): ReferenceListsUpdateBody {
 }
 
 export function ReferenceListsPage() {
+  usePageTitle('Food & Tax Lists');
   const [countryCode, setCountryCode] = useState('DE');
   const isValidCode = countryCode.length === 2;
   const { data, isLoading, isError } = useGetReferenceListsQuery(

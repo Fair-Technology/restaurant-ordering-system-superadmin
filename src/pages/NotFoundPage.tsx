@@ -1,7 +1,9 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { Link } from 'react-router-dom';
 import { Compass } from 'lucide-react';
 
 export function NotFoundPage() {
+  usePageTitle('Not Found');
   return (
     <div className="flex flex-1 min-h-[55vh] flex-col items-center justify-center gap-3 px-4 py-16 text-center">
       <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-100">

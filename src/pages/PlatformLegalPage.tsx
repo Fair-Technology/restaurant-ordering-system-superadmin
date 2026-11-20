@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import {
   useGetPlatformLegalIdentityQuery,
@@ -13,6 +14,7 @@ const inputClass =
 const labelClass = 'block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1';
 
 export function PlatformLegalPage() {
+  usePageTitle('Legal');
   const { data, isLoading, isError } = useGetPlatformLegalIdentityQuery();
   const { data: publicData } = useGetPlatformLegalQuery();
   const [updateIdentity, { isLoading: isSaving }] = useUpdatePlatformLegalIdentityMutation();

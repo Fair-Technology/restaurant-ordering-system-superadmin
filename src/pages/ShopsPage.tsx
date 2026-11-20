@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -29,6 +30,7 @@ const STATUS_STYLE: Record<ShopStatusKind, string> = {
 };
 
 export function ShopsPage() {
+  usePageTitle('Shops');
   const canWrite = useCanWrite();
   const { data: shops, isLoading, isError } = useGetShopsQuery();
   const [search, setSearch] = useState('');
