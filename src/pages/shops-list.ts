@@ -4,7 +4,7 @@ export const PAGE_SIZE = 20;
 
 /** Deleted shops are hidden unless showDeleted; name search is case-insensitive substring. */
 export function filterShops(shops: readonly ShopSummaryDto[], search: string, showDeleted: boolean): ShopSummaryDto[] {
-  const needle = search.toLowerCase();
+  const needle = search.trim().toLowerCase();
   return shops.filter((s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(needle));
 }
 

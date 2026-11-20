@@ -61,6 +61,12 @@ describe('filterShops', () => {
     expect(filterShops(shops, 'PASTA', false).map((s) => s.id)).toEqual(['1']);
     expect(filterShops(shops, 'pasta', true).map((s) => s.id)).toEqual(['1', '3']);
   });
+
+  it('trims leading/trailing whitespace from the search term', () => {
+    expect(filterShops(shops, 'pasta ', false).map((s) => s.id)).toEqual(['1']);
+    expect(filterShops(shops, '  ma  ', false).map((s) => s.id)).toEqual(['1']);
+    expect(filterShops(shops, '   ', false).map((s) => s.id)).toEqual(['1', '2']);
+  });
 });
 
 describe('pageOf', () => {
