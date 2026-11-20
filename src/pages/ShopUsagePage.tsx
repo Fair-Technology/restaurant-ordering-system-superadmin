@@ -5,10 +5,12 @@ import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { formatDateTime } from '../utils/date';
 import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 import { WriteOnly } from '../auth/WriteOnly';
+import { useShopName } from './shop-name';
 
 export function ShopUsagePage() {
   usePageTitle('Usage');
   const { shopId } = useParams<{ shopId: string }>();
+  const shopName = useShopName(shopId);
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGetShopUsageQuery({ shopId: shopId! });
   const [reconcile, { isLoading: isReconciling, data: reconcileData }] = useReconcileShopUsageMutation();
@@ -33,7 +35,7 @@ export function ShopUsagePage() {
         >
           ← All Shops
         </button>
-        <h1 className="text-2xl font-semibold text-indigo-900">Usage — Shop {shopId}</h1>
+        <h1 className="text-2xl font-semibold text-indigo-900">Usage{shopName ? ` — ${shopName}` : ''}</h1>
       </div>
 
       <div className="glass-card p-6 space-y-5">
