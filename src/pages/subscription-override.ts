@@ -1,6 +1,16 @@
 export const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'] as const;
 export type LimitKey = (typeof LIMIT_KEYS)[number];
 
+export const LIMIT_KEY_LABELS: Record<LimitKey, string> = {
+  ORDERS_PER_MONTH: 'Orders per month',
+  STAFF_ACCOUNTS: 'Staff accounts',
+};
+
+/** Human label for a limit key, or the raw key if unmapped. */
+export function limitKeyLabel(key: string): string {
+  return (LIMIT_KEY_LABELS as Record<string, string>)[key] ?? key;
+}
+
 /** A date-only input means "through the end of that day" in the superadmin's local time. */
 export function endOfDayIso(date: string): string {
   return new Date(`${date}T23:59:59`).toISOString();

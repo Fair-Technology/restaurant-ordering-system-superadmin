@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   buildLimitOverrideBody,
   endOfDayIso,
+  limitKeyLabel,
   limitLabel,
   limitOverrideError,
   planOverrideError,
@@ -90,5 +91,16 @@ describe('buildLimitOverrideBody', () => {
     // Setting STAFF_ACCOUNTS on a shop that already overrides ORDERS_PER_MONTH drops the latter.
     // See the PR description; this test pins the payload shape so a fix is a deliberate change.
     expect(buildLimitOverrideBody('STAFF_ACCOUNTS', '5', 'r', '').limits).toHaveLength(1);
+  });
+});
+
+describe('limitKeyLabel', () => {
+  it('maps known keys to human labels', () => {
+    expect(limitKeyLabel('ORDERS_PER_MONTH')).toBe('Orders per month');
+    expect(limitKeyLabel('STAFF_ACCOUNTS')).toBe('Staff accounts');
+  });
+
+  it('falls back to the raw key when unmapped', () => {
+    expect(limitKeyLabel('SOMETHING_NEW')).toBe('SOMETHING_NEW');
   });
 });

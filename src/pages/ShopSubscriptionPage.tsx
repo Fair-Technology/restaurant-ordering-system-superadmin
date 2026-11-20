@@ -14,11 +14,13 @@ import {
   LIMIT_KEYS,
   buildLimitOverrideBody,
   endOfDayIso,
+  limitKeyLabel,
   limitLabel,
   limitOverrideError,
   planOverrideError,
   type LimitKey,
 } from './subscription-override';
+import { useShopName } from './shop-name';
 import { WriteOnly } from '../auth/WriteOnly';
 
 const STATUS_COLORS: Record<string, string> = {
@@ -33,6 +35,7 @@ export function ShopSubscriptionPage() {
   usePageTitle('Subscription');
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
+  const shopName = useShopName(shopId);
   const { data, isLoading, isError, isFetching } = useGetShopSubscriptionQuery({ shopId: shopId! });
   // The override picker lists every plan an operator may assign, hidden ones included.
   const { data: plansData } = useGetPlansQuery({ includeHidden: true });
@@ -136,7 +139,7 @@ export function ShopSubscriptionPage() {
         >
           ← All Shops
         </button>
-        <h1 className="text-2xl font-semibold text-indigo-900">Subscription — Shop {shopId}</h1>
+        <h1 className="text-2xl font-semibold text-indigo-900">Subscription{shopName ? ` — ${shopName}` : ''}</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -306,7 +309,7 @@ export function ShopSubscriptionPage() {
             <div className="space-y-2 border border-white/30 rounded-lg px-3 py-3">
               {limitOverride.limits.map((l) => (
                 <div key={l.key} className="flex justify-between">
-                  <span className="text-gray-500 text-sm font-mono">{l.key}</span>
+                  <span className="text-gray-500 text-sm">{limitKeyLabel(l.key)}</span>
                   <span className="text-gray-700 text-sm">{limitLabel(l.value)}</span>
                 </div>
               ))}
@@ -347,7 +350,7 @@ export function ShopSubscriptionPage() {
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
               >
                 {LIMIT_KEYS.map((k) => (
-                  <option key={k} value={k}>{k}</option>
+                  <option key={k} value={k}>{limitKeyLabel(k)}</option>
                 ))}
               </select>
             </div>
