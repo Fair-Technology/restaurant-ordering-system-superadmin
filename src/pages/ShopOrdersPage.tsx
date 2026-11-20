@@ -116,7 +116,7 @@ export function ShopOrdersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-600 hidden md:table-cell">
-                      {order.customerName ?? '—'}
+                      {order.customerName?.trim() ? order.customerName : 'Guest'}
                     </td>
                     <td className="px-6 py-4 text-gray-600 hidden sm:table-cell">
                       {formatOrderTotal(order)}
