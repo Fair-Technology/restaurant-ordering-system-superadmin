@@ -2,6 +2,7 @@ import { usePageTitle } from '../features/layout/usePageTitle';
 import { type ReactNode, useState } from 'react';
 import { useGetReferenceListsQuery, useUpdateReferenceListsMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
+import { formatDateTime } from '../utils/date';
 import type { AllergenDef, FulfilmentMode, ReferenceListsResultDto, TaxRateRow } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
@@ -132,7 +133,7 @@ function ReferenceListsEditor({
   return (
     <WriteFieldset className="space-y-6">
       <p className="text-xs text-gray-500">
-        {data.updatedAt ? `Last changed ${new Date(data.updatedAt).toLocaleString()}` : 'No changes yet.'}
+        {data.updatedAt ? `Last changed ${formatDateTime(data.updatedAt)}` : 'No changes yet.'}
       </p>
 
       <EntryTable
@@ -359,7 +360,7 @@ function TaxRatesSection({
               </td>
               <td className="px-4 py-2 text-gray-700">{MODE_LABELS[row.fulfilmentMode]}</td>
               <td className="px-4 py-2 text-gray-700">{formatBasisPoints(row.rateBasisPoints)}</td>
-              <td className="px-4 py-2 text-gray-700">{new Date(row.effectiveFrom).toLocaleString()}</td>
+              <td className="px-4 py-2 text-gray-700">{formatDateTime(row.effectiveFrom)}</td>
             </tr>
           ))}
         </tbody>
