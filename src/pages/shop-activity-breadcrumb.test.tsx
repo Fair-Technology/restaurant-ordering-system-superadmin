@@ -26,4 +26,16 @@ describe('ShopActivityPage breadcrumb', () => {
     expect(html).toContain('Ma Pasta');
     expect(html).not.toContain('shop-uuid-123');
   });
+
+  it('links "All Shops" to the shops list, not the dashboard', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/shops/shop-uuid-123/activity']}>
+        <Routes>
+          <Route path="/shops/:shopId/activity" element={<ShopActivityPage />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+    expect(html).toMatch(/<a [^>]*href="\/shops"[^>]*>\s*All Shops/);
+    expect(html).not.toMatch(/<a [^>]*href="\/"[^>]*>\s*All Shops/);
+  });
 });

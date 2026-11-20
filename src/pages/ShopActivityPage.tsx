@@ -103,7 +103,7 @@ export function ShopActivityPage() {
     <div>
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <Link to="/" className="hover:text-indigo-600 transition-colors">
+        <Link to="/shops" className="hover:text-indigo-600 transition-colors">
           All Shops
         </Link>
         <ChevronRight className="w-4 h-4" />
