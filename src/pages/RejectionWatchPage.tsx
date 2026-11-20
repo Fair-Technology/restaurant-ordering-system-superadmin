@@ -1,6 +1,7 @@
 import { usePageTitle } from '../features/layout/usePageTitle';
 import { Link } from 'react-router-dom';
 import { useGetRejectionWatchQuery } from '../services/api';
+import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 
 const SKELETON_ROWS = 5;
@@ -19,7 +20,7 @@ function RejectionWatchSkeleton() {
         </p>
       </div>
 
-      <div className="glass-card overflow-x-auto">
+      <ScrollableTableCard>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-gray-500 uppercase tracking-wide">
@@ -47,7 +48,7 @@ function RejectionWatchSkeleton() {
             ))}
           </tbody>
         </table>
-      </div>
+      </ScrollableTableCard>
     </div>
   );
 }
@@ -70,7 +71,7 @@ export function RejectionWatchPage() {
         </p>
       </div>
 
-      <div className="glass-card overflow-x-auto">
+      <ScrollableTableCard>
         <table className="w-full text-sm">
           <thead>
             <tr className="text-left text-xs text-gray-500 uppercase tracking-wide">
@@ -105,7 +106,7 @@ export function RejectionWatchPage() {
             )}
           </tbody>
         </table>
-      </div>
+      </ScrollableTableCard>
     </div>
   );
 }
