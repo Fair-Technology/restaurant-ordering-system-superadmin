@@ -6,6 +6,7 @@ const useGetPlanQuery = vi.fn();
 vi.mock('../services/api', () => ({
   useGetPlanQuery: (...args: unknown[]) => useGetPlanQuery(...args),
   useUpdatePlanMutation: () => [vi.fn(), { isLoading: false }],
+  useGetShopByIdQuery: () => ({ data: undefined }),
 }));
 
 import { EditPlanPage } from './EditPlanPage';
