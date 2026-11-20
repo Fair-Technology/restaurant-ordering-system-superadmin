@@ -8,6 +8,12 @@ export function filterShops(shops: readonly ShopSummaryDto[], search: string, sh
   return shops.filter((s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(needle));
 }
 
+/** Active vs soft-deleted shop counts, derived from the list itself (not the API's `total`). */
+export function countShops(shops: readonly ShopSummaryDto[]): { active: number; deleted: number } {
+  const deleted = shops.filter((s) => s.isDeleted).length;
+  return { active: shops.length - deleted, deleted };
+}
+
 export function pageOf<T>(items: readonly T[], page: number, size = PAGE_SIZE): { pageItems: T[]; totalPages: number } {
   return { pageItems: items.slice((page - 1) * size, page * size), totalPages: Math.ceil(items.length / size) };
 }

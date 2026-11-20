@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { useGetShopsQuery } from '../services/api';
+import { countShops } from './shops-list';
 import { Store, CreditCard, ArrowRight } from 'lucide-react';
 
 export function DashboardPage() {
   const { accounts } = useMsal();
   const account = accounts[0];
   const { data: shops, isLoading } = useGetShopsQuery();
+  const { active: activeShops } = countShops(shops?.shops ?? []);
 
   return (
     <div>
@@ -24,7 +26,7 @@ export function DashboardPage() {
             <span className="text-sm font-medium text-gray-500">Total Shops</span>
           </div>
           <p className="text-3xl font-semibold text-indigo-900">
-            {isLoading ? '—' : (shops?.total ?? 0)}
+            {isLoading ? '—' : activeShops}
           </p>
         </div>
 
