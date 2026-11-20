@@ -5,6 +5,7 @@ import {
   useGetPlatformLegalQuery,
   useUpdatePlatformLegalIdentityMutation,
 } from '../services/api';
+import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { formatDateTime } from '../utils/date';
 import { toPlatformLegalBody, toPlatformLegalForm, type PlatformLegalFormState } from './platform-legal';
@@ -59,9 +60,11 @@ export function PlatformLegalPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-indigo-900">Legal</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          {data.updatedAt ? `Last changed ${formatDateTime(data.updatedAt)}` : 'Not filled in yet.'} These
-          details appear in every restaurant&apos;s privacy notice. Until the operator details are filled in, no
-          restaurant can go live.
+          {data.updatedAt ? `Last changed ${formatDateTime(data.updatedAt)}.` : 'Not filled in yet.'}
+        </p>
+        <p className="text-sm text-gray-500 mt-1">
+          These details appear in every restaurant&apos;s privacy notice. Until the operator details are filled in,
+          no restaurant can go live.
         </p>
       </div>
 
@@ -199,6 +202,7 @@ export function PlatformLegalPage() {
               </span>
             )}
           </div>
+          <ScrollableTableCard bare>
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-white/30">
@@ -217,6 +221,7 @@ export function PlatformLegalPage() {
               ))}
             </tbody>
           </table>
+          </ScrollableTableCard>
         </div>
       )}
     </div>
