@@ -61,6 +61,16 @@ describe('filterShops', () => {
     expect(filterShops(shops, 'PASTA', false).map((s) => s.id)).toEqual(['1']);
     expect(filterShops(shops, 'pasta', true).map((s) => s.id)).toEqual(['1', '3']);
   });
+
+  it('ignores leading and trailing whitespace in the search', () => {
+    expect(filterShops(shops, 'pasta ', false).map((s) => s.id)).toEqual(['1']);
+    expect(filterShops(shops, '  Pasta', false).map((s) => s.id)).toEqual(['1']);
+  });
+
+  it('treats a whitespace-only search like an empty one', () => {
+    expect(filterShops(shops, '   ', false).map((s) => s.id)).toEqual(['1', '2']);
+    expect(filterShops(shops, '   ', true).map((s) => s.id)).toEqual(['1', '2', '3']);
+  });
 });
 
 describe('pageOf', () => {
