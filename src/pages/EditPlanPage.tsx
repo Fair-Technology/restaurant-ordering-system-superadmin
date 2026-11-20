@@ -13,7 +13,7 @@ export function EditPlanPage() {
   usePageTitle('Edit Plan');
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGetPlanQuery({ planId: planId! });
+  const { data, isLoading, isError, error: loadError, refetch } = useGetPlanQuery({ planId: planId! });
   const [updatePlan, { isLoading: isSaving }] = useUpdatePlanMutation();
 
   const [name, setName] = useState('');
@@ -66,9 +66,39 @@ export function EditPlanPage() {
   }
 
   if (isLoading) return <LoadingScreen title="Loading plan" subtitle="Fetching plan configuration and limits." />;
-  if (isError || !data) return (
-    <div className="glass-card p-12 text-center text-sm text-red-500">Failed to load plan.</div>
-  );
+  if (isError || !data) {
+    const isNotFound = isError && (loadError as { status?: number } | undefined)?.status === 404;
+    return (
+      <div>
+        <div className="mb-6">
+          <button
+            onClick={() => navigate('/plans')}
+            className="text-sm text-gray-500 hover:text-indigo-600 mb-2 inline-block transition-colors"
+          >
+            ← Plans
+          </button>
+          <h1 className="text-2xl font-semibold text-indigo-900">
+            {isNotFound ? 'Plan not found' : 'Failed to load plan'}
+          </h1>
+        </div>
+        <div className="glass-card p-12 text-center" role="alert">
+          <p className="text-sm text-red-500">
+            {isNotFound
+              ? "This plan doesn't exist. It may have been removed, or the link is incorrect."
+              : 'Something went wrong loading this plan. Please try again.'}
+          </p>
+          {!isNotFound && (
+            <button
+              onClick={() => refetch()}
+              className="mt-4 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"
+            >
+              Retry
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
