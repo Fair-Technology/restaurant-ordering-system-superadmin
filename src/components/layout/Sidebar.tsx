@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { NavLink, useMatch } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import {
@@ -15,6 +16,9 @@ import {
   ShieldAlert,
   X,
 } from 'lucide-react';
+
+/** Tailwind `md` breakpoint. Keep in sync with the `md:` classes below. */
+const DESKTOP_QUERY = '(min-width: 768px)';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
   `flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
@@ -35,12 +39,34 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   const shopMatch = useMatch('/shops/:shopId/*');
   const shopId = shopMatch?.params.shopId;
 
+  const [isDesktop, setIsDesktop] = useState(() =>
+    typeof window === 'undefined' ? false : window.matchMedia(DESKTOP_QUERY).matches,
+  );
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    const mql = window.matchMedia(DESKTOP_QUERY);
+    const onChange = (event: MediaQueryListEvent) => setIsDesktop(event.matches);
+    mql.addEventListener('change', onChange);
+    return () => mql.removeEventListener('change', onChange);
+  }, []);
+
+  // Move focus into the drawer when it opens.
+  useEffect(() => {
+    if (open) closeButtonRef.current?.focus();
+  }, [open]);
+
+  // Below md a closed drawer is only translated off-screen; `inert` removes it from the
+  // tab order and accessibility tree. It must never apply from md up, where it is always shown.
+  const closedOnMobile = !isDesktop && !open;
+
   const handleSignOut = () => {
     instance.logoutRedirect();
   };
 
   return (
     <aside
+      {...(closedOnMobile ? { inert: true } : {})}
       className={`w-56 flex-shrink-0 flex flex-col glass-card rounded-none border-r border-white/30 min-h-screen
         fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 overflow-y-auto
         md:static md:z-auto md:translate-x-0 md:sticky md:top-0 md:overflow-visible
@@ -51,6 +77,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         <ShieldCheck className="w-5 h-5 text-purple-600" />
         <span className="font-semibold text-indigo-900 text-sm">Superadmin</span>
         <button
+          ref={closeButtonRef}
           type="button"
           onClick={onClose}
           aria-label="Close navigation"

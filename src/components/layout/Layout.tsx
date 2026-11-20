@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './Sidebar';
@@ -6,6 +6,14 @@ import { SkipLink } from './SkipLink';
 
 export function Layout() {
   const [navOpen, setNavOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
+  const wasNavOpenRef = useRef(false);
+
+  // Restore focus to the hamburger trigger when the drawer closes (Escape, backdrop, or close button).
+  useEffect(() => {
+    if (wasNavOpenRef.current && !navOpen) menuButtonRef.current?.focus();
+    wasNavOpenRef.current = navOpen;
+  }, [navOpen]);
 
   // Escape closes the mobile drawer, matching the rest of the app's modal behaviour.
   useEffect(() => {
@@ -36,6 +44,7 @@ export function Layout() {
         {/* Mobile-only bar: the sidebar is a drawer below md. */}
         <div className="md:hidden flex items-center gap-2 mb-4">
           <button
+            ref={menuButtonRef}
             type="button"
             onClick={() => setNavOpen(true)}
             aria-label="Open navigation"
