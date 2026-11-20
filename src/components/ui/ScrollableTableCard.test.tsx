@@ -14,12 +14,12 @@ beforeAll(() => {
   );
 });
 
-function renderWith(scrollWidth: number, clientWidth: number) {
+function renderWith(scrollWidth: number, clientWidth: number, bare = false) {
   const proto = HTMLElement.prototype;
   const sw = vi.spyOn(proto, 'scrollWidth', 'get').mockReturnValue(scrollWidth);
   const cw = vi.spyOn(proto, 'clientWidth', 'get').mockReturnValue(clientWidth);
   render(
-    <ScrollableTableCard>
+    <ScrollableTableCard bare={bare}>
       <table>
         <tbody>
           <tr>
@@ -48,6 +48,23 @@ describe('ScrollableTableCard', () => {
   it('hides the affordance when content fits', () => {
     const restore = renderWith(375, 375);
     expect(screen.queryByTestId('scroll-affordance')).toBeNull();
+    restore();
+  });
+
+  it('renders inside a glass-card wrapper by default', () => {
+    const restore = renderWith(375, 375);
+    const wrapper = screen.getByTestId('scroll-container').parentElement!;
+    expect(wrapper.className).toContain('glass-card');
+    expect(wrapper.className).toContain('mb-4');
+    restore();
+  });
+
+  it('skips the glass-card wrapper when bare', () => {
+    const restore = renderWith(800, 375, true);
+    const wrapper = screen.getByTestId('scroll-container').parentElement!;
+    expect(wrapper.className).not.toContain('glass-card');
+    expect(wrapper.className).not.toContain('mb-4');
+    expect(screen.getByTestId('scroll-affordance')).toBeTruthy();
     restore();
   });
 });
