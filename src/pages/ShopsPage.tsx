@@ -152,7 +152,11 @@ export function ShopsPage() {
         </label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <label htmlFor="shops-search" className="sr-only">
+            Search shops by name
+          </label>
           <input
+            id="shops-search"
             type="text"
             placeholder="Search by name..."
             value={search}
@@ -253,12 +257,14 @@ export function ShopsPage() {
                       <div className="inline-flex items-center gap-3">
                         <Link
                           to={`/shops/${shop.id}/subscription`}
+                          aria-label={`Subscription for ${shop.name}`}
                           className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                         >
                           Subscription
                         </Link>
                         <Link
                           to={`/shops/${shop.id}/usage`}
+                          aria-label={`Usage for ${shop.name}`}
                           className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                         >
                           Usage
@@ -266,19 +272,24 @@ export function ShopsPage() {
                         <Link
                           to={`/shops/${shop.id}/activity`}
                           state={{ shopName: shop.name }}
+                          aria-label={`Activity for ${shop.name}`}
                           className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                         >
                           Activity
                           <ArrowRight className="w-3 h-3" />
                         </Link>
                         {!canWrite && !shop.isDeleted && (
-                          <span className="text-gray-500 text-xs font-medium">
+                          <span
+                            aria-label={`${missedOrdersLimitLabel(missedOrdersLimitOf(shop))} for ${shop.name}`}
+                            className="text-gray-500 text-xs font-medium"
+                          >
                             {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
                           </span>
                         )}
                         {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => openLimit(shop)}
+                            aria-label={`${missedOrdersLimitLabel(missedOrdersLimitOf(shop))} for ${shop.name}`}
                             className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                           >
                             {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
@@ -287,6 +298,7 @@ export function ShopsPage() {
                         {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => setOfflineTarget(shop)}
+                            aria-label={shop.offlineBySuperadmin ? `Bring ${shop.name} back online` : `Take ${shop.name} offline`}
                             className={`${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
                           >
                             {shop.offlineBySuperadmin ? 'Bring back online' : 'Take offline'}
@@ -295,6 +307,7 @@ export function ShopsPage() {
                         {canWrite && shop.isDeleted && (
                           <button
                             onClick={() => setRestoreTarget(shop)}
+                            aria-label={`Restore ${shop.name}`}
                             className="text-green-700 hover:text-green-900 text-xs font-medium transition-colors"
                           >
                             Restore
