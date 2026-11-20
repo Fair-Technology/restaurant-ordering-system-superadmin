@@ -22,4 +22,13 @@ export const getShopStatus = (shop: StatusInput): ShopStatus => {
   return { kind: 'online', label: 'Online', ordersPaused };
 };
 
+/** Row action label for toggling the platform offline lock. */
+export const offlineActionLabel = (
+  shop: StatusInput,
+  status: Pick<ShopStatus, 'kind'>,
+): string => {
+  if (shop.offlineBySuperadmin) return 'Bring back online';
+  return status.kind === 'offline-owner' ? 'Force offline' : 'Take offline';
+};
+
 export const SUPERADMIN_REASON_MAX = 500;

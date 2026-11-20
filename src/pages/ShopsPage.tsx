@@ -15,7 +15,7 @@ import {
   missedOrdersLimitOf,
 } from './missed-orders';
 import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-react';
-import { getShopStatus, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
+import { getShopStatus, offlineActionLabel, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
 import { useCanWrite } from '../auth/platformAccess';
@@ -202,7 +202,9 @@ export function ShopsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/20">
-                {pageItems.map((shop) => (
+                {pageItems.map((shop) => {
+                  const status = getShopStatus(shop);
+                  return (
                   <tr
                     key={shop.id}
                     className={`hover:bg-white/20 transition-colors ${shop.isDeleted ? 'opacity-60' : ''}`}
@@ -220,7 +222,6 @@ export function ShopsPage() {
                     </td>
                     <td className="px-6 py-4">
                       {(() => {
-                        const status = getShopStatus(shop);
                         return (
                           <div className="flex flex-col items-start gap-1">
                             <div className="flex items-center gap-1 flex-wrap">
@@ -291,7 +292,7 @@ export function ShopsPage() {
                             onClick={() => setOfflineTarget(shop)}
                             className={`${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
                           >
-                            {shop.offlineBySuperadmin ? 'Bring back online' : 'Take offline'}
+                            {offlineActionLabel(shop, status)}
                           </button>
                         )}
                         {canWrite && shop.isDeleted && (
@@ -305,7 +306,8 @@ export function ShopsPage() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
           </div>

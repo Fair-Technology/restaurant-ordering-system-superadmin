@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getShopStatus } from './shop-status';
+import { getShopStatus, offlineActionLabel } from './shop-status';
 
 describe('getShopStatus', () => {
   it('a shop with no flags is online', () => {
@@ -21,5 +21,20 @@ describe('getShopStatus', () => {
   });
   it('orders paused is carried through', () => {
     expect(getShopStatus({ ordersPaused: true })).toEqual({ kind: 'online', label: 'Online', ordersPaused: true });
+  });
+});
+
+describe('offlineActionLabel', () => {
+  const label = (shop: Parameters<typeof getShopStatus>[0]) =>
+    offlineActionLabel(shop, getShopStatus(shop));
+  it('online shop: Take offline', () => {
+    expect(label({})).toBe('Take offline');
+  });
+  it('owner-offline, not platform-offline: Force offline', () => {
+    expect(label({ isPaused: true })).toBe('Force offline');
+  });
+  it('platform-offline: Bring back online (even if owner-offline too)', () => {
+    expect(label({ offlineBySuperadmin: true })).toBe('Bring back online');
+    expect(label({ isPaused: true, offlineBySuperadmin: true })).toBe('Bring back online');
   });
 });
