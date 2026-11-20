@@ -9,6 +9,7 @@ import {
   useGetPlansQuery,
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
+import { formatDate } from '../utils/date';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import {
   LIMIT_KEYS,
@@ -179,7 +180,7 @@ export function ShopSubscriptionPage() {
             {subscription.currentPeriodEnd && (
               <div className="flex justify-between items-center">
                 <span className="text-gray-500 text-sm">Period End</span>
-                <span className="text-gray-700 text-sm">{new Date(subscription.currentPeriodEnd).toLocaleDateString()}</span>
+                <span className="text-gray-700 text-sm">{formatDate(subscription.currentPeriodEnd)}</span>
               </div>
             )}
             {subscription.scheduledChange && (
@@ -188,7 +189,7 @@ export function ShopSubscriptionPage() {
                 <span className="text-gray-700 text-sm">
                   {plans.find((p) => p.id === subscription.scheduledChange!.planId)?.name ?? subscription.scheduledChange.planId}
                   {' on '}
-                  {new Date(subscription.scheduledChange.effectiveAt).toLocaleDateString()}
+                  {formatDate(subscription.scheduledChange.effectiveAt)}
                 </span>
               </div>
             )}
@@ -232,7 +233,7 @@ export function ShopSubscriptionPage() {
                 {subscription.overrideExpiresAt && (
                   <div className="flex justify-between">
                     <span className="text-gray-500 text-sm">Expires</span>
-                    <span className="text-gray-700 text-sm">{new Date(subscription.overrideExpiresAt).toLocaleDateString()}</span>
+                    <span className="text-gray-700 text-sm">{formatDate(subscription.overrideExpiresAt)}</span>
                   </div>
                 )}
               </div>

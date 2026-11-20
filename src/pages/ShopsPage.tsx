@@ -9,6 +9,7 @@ import {
   type ShopSummaryDto,
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
+import { formatDate } from '../utils/date';
 import {
   MISSED_ORDERS_LIMIT_OPTIONS,
   missedOrdersLimitLabel,
@@ -19,9 +20,6 @@ import { getShopStatus, offlineActionLabel, SUPERADMIN_REASON_MAX, type ShopStat
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
 import { useCanWrite } from '../auth/platformAccess';
-
-const formatDate = (iso: string) =>
-  new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
 const STATUS_STYLE: Record<ShopStatusKind, string> = {
   online: 'bg-green-100 text-green-700',
