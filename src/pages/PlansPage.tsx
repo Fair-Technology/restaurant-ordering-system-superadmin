@@ -7,6 +7,7 @@ import type { Plan } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { WriteOnly } from '../auth/WriteOnly';
 import { useCanWrite } from '../auth/platformAccess';
+import { limitKeyLabel } from './subscription-override';
 
 export function PlansPage() {
   usePageTitle('Plans');
@@ -141,7 +142,7 @@ export function PlansPage() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-gray-500 text-xs hidden md:table-cell">
-                    {plan.limits.map((l) => `${l.key}: ${l.value === -1 ? '∞' : l.value}`).join(', ') || '—'}
+                    {plan.limits.map((l) => `${limitKeyLabel(l.key)}: ${l.value === -1 ? '∞' : l.value}`).join(' · ') || '—'}
                   </td>
                   <td className="px-6 py-4 text-gray-500 hidden md:table-cell">{plan.sortOrder}</td>
                   <td className="px-6 py-4 text-right">
