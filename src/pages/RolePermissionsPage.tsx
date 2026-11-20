@@ -4,6 +4,7 @@ import type { ShopPermission } from '../services/api';
 import { useGetRolePermissionsQuery, useUpdateRolePermissionsMutation } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
 import { formatDateTime } from '../utils/date';
+import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PERMISSION_ROWS, togglePermission } from './role-permissions';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
@@ -63,7 +64,7 @@ export function RolePermissionsPage() {
         </p>
       </div>
 
-      <div className="glass-card overflow-hidden">
+      <ScrollableTableCard>
         <WriteFieldset>
         <table className="w-full text-sm">
           <thead>
@@ -110,9 +111,11 @@ export function RolePermissionsPage() {
           </tbody>
         </table>
         </WriteFieldset>
+      </ScrollableTableCard>
 
-        <WriteOnly>
-          <div className="px-6 py-4 border-t border-white/30 flex items-center gap-4">
+      <WriteOnly>
+        <div className="glass-card overflow-hidden">
+          <div className="px-6 py-4 flex items-center gap-4">
             <button
               onClick={handleSave}
               disabled={isSaving}
@@ -123,8 +126,8 @@ export function RolePermissionsPage() {
             {error && <p className="text-red-500 text-sm">{error}</p>}
             {saved && <p className="text-green-600 text-sm">Saved successfully.</p>}
           </div>
-        </WriteOnly>
-      </div>
+        </div>
+      </WriteOnly>
     </div>
   );
 }
