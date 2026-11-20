@@ -6,6 +6,7 @@ import {
   useUpdatePlatformLegalIdentityMutation,
 } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { formatDateTime } from '../utils/date';
 import { toPlatformLegalBody, toPlatformLegalForm, type PlatformLegalFormState } from './platform-legal';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
@@ -58,7 +59,7 @@ export function PlatformLegalPage() {
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-indigo-900">Legal</h1>
         <p className="text-sm text-gray-500 mt-0.5">
-          {data.updatedAt ? `Last changed ${new Date(data.updatedAt).toLocaleString()}` : 'Not filled in yet.'} These
+          {data.updatedAt ? `Last changed ${formatDateTime(data.updatedAt)}` : 'Not filled in yet.'} These
           details appear in every restaurant&apos;s privacy notice. Until the operator details are filled in, no
           restaurant can go live.
         </p>

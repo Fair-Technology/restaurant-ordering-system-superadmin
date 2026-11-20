@@ -6,6 +6,7 @@ import {
   useRejectShopNameChangeMutation,
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
+import { formatDate } from '../utils/date';
 import { FileEdit } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { WriteOnly } from '../auth/WriteOnly';
@@ -112,7 +113,7 @@ export function NameChangeRequestsPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-gray-500 hidden lg:table-cell">
-                      {new Date(req.requestedAt).toLocaleDateString()}
+                      {formatDate(req.requestedAt)}
                     </td>
                     <td className="px-6 py-4">
                       <WriteOnly>

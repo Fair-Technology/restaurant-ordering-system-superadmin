@@ -5,6 +5,7 @@ import { useGetAuditEntriesQuery } from '../services/api';
 import type { AuditEntry } from '../services/api';
 import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { formatDateTime } from '../utils/date';
 import { ENTITY_TYPE_COLORS, ENTITY_TYPE_LABELS, actionLabel, entityTypeLabel } from './shop-activity-labels';
 
 const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order'] as const;
@@ -37,13 +38,7 @@ export function AuditEntryCard({ entry, actorLabel }: { entry: AuditEntry; actor
               <span className="font-semibold text-indigo-800">{entry.entityName}</span>
             </p>
             <p className="text-xs text-gray-400 mt-0.5">
-              {new Date(entry.timestamp).toLocaleString('en-GB', {
-                day: 'numeric',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}
+              {formatDateTime(entry.timestamp)}
             </p>
           </div>
         </div>

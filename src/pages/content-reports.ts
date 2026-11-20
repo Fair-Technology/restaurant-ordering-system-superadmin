@@ -1,5 +1,6 @@
 import type { ContentReport, ContentReportCategory, ContentReportStatus } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
+import { formatDateTime } from '../utils/date';
 
 /** The API's default page size for the content-report queue. */
 export const CONTENT_REPORT_PAGE_SIZE = 20;
@@ -104,14 +105,5 @@ export const EMPTY_PAST_END_MESSAGE = 'No reports on this page.';
 export const isEmptyPastEnd = (reportCount: number, page: number): boolean =>
   reportCount === 0 && page > 1;
 
-const RECEIVED_AT_FORMAT: Intl.DateTimeFormatOptions = {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: '2-digit',
-  minute: '2-digit',
-};
-
 /** One timestamp format for the list and the detail, so the two always agree. */
-export const formatReceivedAt = (iso: string): string =>
-  new Date(iso).toLocaleString('en-GB', RECEIVED_AT_FORMAT);
+export const formatReceivedAt = formatDateTime;

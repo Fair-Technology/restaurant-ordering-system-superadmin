@@ -2,6 +2,7 @@ import { usePageTitle } from '../features/layout/usePageTitle';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetShopUsageQuery, useReconcileShopUsageMutation } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { formatDateTime } from '../utils/date';
 import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 import { WriteOnly } from '../auth/WriteOnly';
 
@@ -49,7 +50,7 @@ export function ShopUsagePage() {
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">Last Reconciled</p>
             <p className="text-sm text-gray-700">
-              {usage.lastReconciled ? new Date(usage.lastReconciled).toLocaleString() : 'Never'}
+              {usage.lastReconciled ? formatDateTime(usage.lastReconciled) : 'Never'}
             </p>
           </div>
         </div>
