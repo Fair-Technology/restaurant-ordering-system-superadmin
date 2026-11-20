@@ -38,4 +38,15 @@ describe('Layout', () => {
   it('keeps the sidebar inline from the md breakpoint up', () => {
     expect(html).toMatch(/<aside[^>]*md:static/);
   });
+
+  it('renders a skip link as the first focusable element, before the sidebar', () => {
+    const link = html.indexOf('<a href="#main"');
+    expect(link).toBeGreaterThanOrEqual(0);
+    expect(link).toBeLessThan(html.indexOf('<aside'));
+  });
+
+  it('gives the skip link the correct text and the main landmark the matching id', () => {
+    expect(html).toMatch(/<a[^>]*href="#main"[^>]*>Skip to content<\/a>/);
+    expect(html).toMatch(/<main[^>]*\sid="main"/);
+  });
 });

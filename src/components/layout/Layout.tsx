@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { Menu } from 'lucide-react';
 import { Sidebar } from './Sidebar';
+import { SkipLink } from './SkipLink';
 
 export function Layout() {
   const [navOpen, setNavOpen] = useState(false);
@@ -18,6 +19,7 @@ export function Layout() {
 
   return (
     <div className="flex min-h-screen">
+      <SkipLink />
       <Sidebar open={navOpen} onClose={() => setNavOpen(false)} />
 
       {/* Backdrop only exists while the drawer is open below md. */}
@@ -30,7 +32,7 @@ export function Layout() {
         />
       )}
 
-      <main className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
+      <main id="main" className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
         {/* Mobile-only bar: the sidebar is a drawer below md. */}
         <div className="md:hidden flex items-center gap-2 mb-4">
           <button
