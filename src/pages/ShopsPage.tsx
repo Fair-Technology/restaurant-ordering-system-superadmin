@@ -17,6 +17,7 @@ import {
 } from './missed-orders';
 import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-react';
 import { getShopStatus, offlineActionLabel, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
+import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
 import { useCanWrite } from '../auth/platformAccess';
@@ -137,7 +138,7 @@ export function ShopsPage() {
             {shops ? `${shops.total} shops total` : ''}
           </p>
         </div>
-        <div className="flex items-center gap-4 flex-wrap">
+        <div className="flex items-center gap-4 flex-wrap w-full sm:w-auto">
         <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
           <input
             type="checkbox"
@@ -150,14 +151,14 @@ export function ShopsPage() {
           />
           Show deleted
         </label>
-        <div className="relative">
+        <div className="relative flex-1 sm:flex-none">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input
             type="text"
             placeholder="Search by name..."
             value={search}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-9 pr-4 py-2 text-sm border border-white/40 rounded-lg bg-white/60 backdrop-blur focus:outline-none focus:ring-2 focus:ring-indigo-300 w-56"
+            className="pl-9 pr-4 py-2 text-sm border border-white/40 rounded-lg bg-white/60 backdrop-blur focus:outline-none focus:ring-2 focus:ring-indigo-300 w-full sm:w-56"
           />
         </div>
         </div>
@@ -177,7 +178,7 @@ export function ShopsPage() {
 
       {!isError && pageItems.length > 0 && (
         <>
-          <div className="glass-card overflow-hidden mb-4">
+          <ScrollableTableCard>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-white/30">
@@ -251,23 +252,23 @@ export function ShopsPage() {
                       {formatDate(shop.createdAt)}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <div className="inline-flex items-center gap-3">
+                      <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 py-1">
                         <Link
                           to={`/shops/${shop.id}/subscription`}
-                          className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                         >
                           Subscription
                         </Link>
                         <Link
                           to={`/shops/${shop.id}/usage`}
-                          className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                         >
                           Usage
                         </Link>
                         <Link
                           to={`/shops/${shop.id}/activity`}
                           state={{ shopName: shop.name }}
-                          className="inline-flex items-center gap-1 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          className="inline-flex items-center gap-1 py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                         >
                           Activity
                           <ArrowRight className="w-3 h-3" />
@@ -280,7 +281,7 @@ export function ShopsPage() {
                         {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => openLimit(shop)}
-                            className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                            className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                           >
                             {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
                           </button>
@@ -288,7 +289,7 @@ export function ShopsPage() {
                         {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => setOfflineTarget(shop)}
-                            className={`${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
+                            className={`inline-flex items-center py-2 ${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
                           >
                             {offlineActionLabel(shop, status)}
                           </button>
@@ -296,7 +297,7 @@ export function ShopsPage() {
                         {canWrite && shop.isDeleted && (
                           <button
                             onClick={() => setRestoreTarget(shop)}
-                            className="text-green-700 hover:text-green-900 text-xs font-medium transition-colors"
+                            className="inline-flex items-center py-2 text-green-700 hover:text-green-900 text-xs font-medium transition-colors"
                           >
                             Restore
                           </button>
@@ -308,7 +309,7 @@ export function ShopsPage() {
                 })}
               </tbody>
             </table>
-          </div>
+          </ScrollableTableCard>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-sm text-gray-500">
