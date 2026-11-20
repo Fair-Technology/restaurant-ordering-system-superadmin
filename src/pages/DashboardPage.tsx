@@ -1,9 +1,11 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { Link } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { useGetShopsQuery } from '../services/api';
 import { Store, CreditCard, ArrowRight } from 'lucide-react';
 
 export function DashboardPage() {
+  usePageTitle('Dashboard');
   const { accounts } = useMsal();
   const account = accounts[0];
   const { data: shops, isLoading } = useGetShopsQuery();

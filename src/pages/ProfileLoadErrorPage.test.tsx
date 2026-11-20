@@ -3,10 +3,16 @@ import { renderToStaticMarkup } from 'react-dom/server';
 // msalConfig builds a PublicClientApplication that needs `window`; the test never signs out.
 vi.mock('../auth/msalConfig', () => ({ msalInstance: { logoutRedirect: vi.fn() } }));
 
+import { Provider } from 'react-redux';
+import { store } from '../store/store';
 import { ProfileLoadErrorPage } from './ProfileLoadErrorPage';
 
 describe('ProfileLoadErrorPage', () => {
-  const html = renderToStaticMarkup(<ProfileLoadErrorPage onRetry={() => {}} />);
+  const html = renderToStaticMarkup(
+    <Provider store={store}>
+      <ProfileLoadErrorPage onRetry={() => {}} />
+    </Provider>,
+  );
 
   it('renders as an alert with the title', () => {
     expect(html).toContain('role="alert"');

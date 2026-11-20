@@ -1,9 +1,11 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { Link } from 'react-router-dom';
 import { useGetRejectionWatchQuery } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 
 export function RejectionWatchPage() {
+  usePageTitle('Decline Watch');
   const { data, isLoading, isError } = useGetRejectionWatchQuery();
 
   if (isLoading) return <LoadingScreen title="Loading decline watch" subtitle="Counting declined orders for every restaurant." />;

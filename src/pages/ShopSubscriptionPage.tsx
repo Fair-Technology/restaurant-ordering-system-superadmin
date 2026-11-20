@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
@@ -29,6 +30,7 @@ const STATUS_COLORS: Record<string, string> = {
 };
 
 export function ShopSubscriptionPage() {
+  usePageTitle('Subscription');
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, isError, isFetching } = useGetShopSubscriptionQuery({ shopId: shopId! });

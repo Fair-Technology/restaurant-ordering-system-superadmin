@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useMsal } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { Navigate } from 'react-router-dom';
@@ -5,6 +6,7 @@ import { ShieldCheck } from 'lucide-react';
 import { msalInstance, loginRequest } from '../auth/msalConfig';
 
 export function LoginPage() {
+  usePageTitle('Login');
   const { accounts, inProgress } = useMsal();
 
   if (inProgress === InteractionStatus.None && accounts.length > 0) {

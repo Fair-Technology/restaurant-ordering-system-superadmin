@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import type { ShopPermission } from '../services/api';
 import { useGetRolePermissionsQuery, useUpdateRolePermissionsMutation } from '../services/api';
@@ -7,6 +8,7 @@ import { PERMISSION_ROWS, togglePermission } from './role-permissions';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
 export function RolePermissionsPage() {
+  usePageTitle('Roles');
   const { data, isLoading, isError } = useGetRolePermissionsQuery();
   const [updateRolePermissions, { isLoading: isSaving }] = useUpdateRolePermissionsMutation();
 

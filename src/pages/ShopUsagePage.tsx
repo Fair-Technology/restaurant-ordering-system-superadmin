@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetShopUsageQuery, useReconcileShopUsageMutation } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
@@ -5,6 +6,7 @@ import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 import { WriteOnly } from '../auth/WriteOnly';
 
 export function ShopUsagePage() {
+  usePageTitle('Usage');
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGetShopUsageQuery({ shopId: shopId! });

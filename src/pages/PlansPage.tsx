@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetPlansQuery, useCreatePlanMutation } from '../services/api';
@@ -8,6 +9,7 @@ import { WriteOnly } from '../auth/WriteOnly';
 import { useCanWrite } from '../auth/platformAccess';
 
 export function PlansPage() {
+  usePageTitle('Plans');
   const canWrite = useCanWrite();
   // Operators must see hidden plans here so the Visible/Hidden badge is reachable.
   const { data, isLoading, isError } = useGetPlansQuery({ includeHidden: true });

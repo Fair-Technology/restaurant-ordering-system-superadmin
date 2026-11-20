@@ -1,8 +1,10 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useMsal } from '@azure/msal-react';
 import { ShieldOff } from 'lucide-react';
 import { msalInstance } from '../auth/msalConfig';
 
 export function AccessDeniedPage() {
+  usePageTitle('Access Denied');
   const { accounts } = useMsal();
   const email = accounts[0]?.username ?? accounts[0]?.name ?? 'Unknown';
 

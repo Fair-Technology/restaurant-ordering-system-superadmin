@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import {
   useGetShopsQuery,
@@ -10,6 +11,7 @@ import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { WriteOnly } from '../auth/WriteOnly';
 
 export function NameChangeRequestsPage() {
+  usePageTitle('Name Changes');
   const { data: shopsData, isLoading, isError } = useGetShopsQuery();
   const [approveShopNameChange] = useApproveShopNameChangeMutation();
   const [rejectShopNameChange] = useRejectShopNameChangeMutation();

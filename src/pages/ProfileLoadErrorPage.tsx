@@ -1,3 +1,4 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { useMsal } from '@azure/msal-react';
 import { AlertTriangle } from 'lucide-react';
 import { msalInstance } from '../auth/msalConfig';
@@ -7,6 +8,7 @@ interface Props {
 }
 
 export function ProfileLoadErrorPage({ onRetry }: Props) {
+  usePageTitle('Profile Error');
   const { accounts } = useMsal();
   const email = accounts[0]?.username ?? accounts[0]?.name;
 

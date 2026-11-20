@@ -1,8 +1,10 @@
+import { usePageTitle } from '../features/layout/usePageTitle';
 import { isRouteErrorResponse, useRouteError } from 'react-router-dom';
 import { AlertTriangle } from 'lucide-react';
 import { NotFoundPage } from './NotFoundPage';
 
 export function RouteErrorPage() {
+  usePageTitle('Error');
   const error = useRouteError();
 
   if (isRouteErrorResponse(error) && error.status === 404) {
