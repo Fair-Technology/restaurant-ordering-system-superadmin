@@ -17,6 +17,12 @@ const BACKEND_ACTIONS_ADDED = [
   'reference_lists.update',
   'role_permissions.update',
   'platform_legal_identity.update',
+  'order.charges_backfilled',
+  'optionGroup.create',
+  'optionGroup.update',
+  'optionGroup.delete',
+  'optionGroup.option.enable',
+  'optionGroup.option.disable',
 ];
 
 describe('actionLabel', () => {
@@ -47,6 +53,7 @@ describe('entityTypeLabel', () => {
   });
   it('keeps existing labels unchanged', () => {
     expect(entityTypeLabel('shop')).toBe('Shop');
+    expect(entityTypeLabel('optionGroup')).toBe('Option group');
   });
   it('falls back to the raw value for an unknown entity type', () => {
     expect(entityTypeLabel('mystery_thing')).toBe('mystery_thing');

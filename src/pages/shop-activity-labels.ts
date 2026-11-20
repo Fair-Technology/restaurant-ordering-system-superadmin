@@ -11,6 +11,7 @@ export const ENTITY_TYPE_LABELS: Record<string, string> = {
   subscription: 'Subscription',
   customer: 'Customer',
   order: 'Order',
+  optionGroup: 'Option group',
   reference_lists: 'Reference list',
   role_permissions: 'Role permissions',
   platform_legal_identity: 'Platform legal identity',
@@ -24,6 +25,7 @@ export const ENTITY_TYPE_COLORS: Record<string, string> = {
   subscription: 'bg-pink-100 text-pink-700',
   customer: 'bg-teal-100 text-teal-700',
   order: 'bg-amber-100 text-amber-700',
+  optionGroup: 'bg-cyan-100 text-cyan-700',
 };
 
 export const ACTION_LABELS: Record<string, string> = {
@@ -45,6 +47,13 @@ export const ACTION_LABELS: Record<string, string> = {
   'shop.cover_image': 'updated cover image',
   'shop.cover_image_remove': 'removed cover image',
   'order.refund': 'refunded an order',
+  // Written by the system actor when a maintenance backfill recomputes an order's charges.
+  'order.charges_backfilled': 'backfilled order charges',
+  'optionGroup.create': 'created an option group',
+  'optionGroup.update': 'updated an option group',
+  'optionGroup.delete': 'deleted an option group',
+  'optionGroup.option.enable': 'made an option available',
+  'optionGroup.option.disable': 'made an option unavailable',
   'promotion.code_create': 'created a discount code',
   'promotion.code_update': 'switched a discount code on or off',
   'promotion.loyalty_update': 'changed the loyalty vouchers',

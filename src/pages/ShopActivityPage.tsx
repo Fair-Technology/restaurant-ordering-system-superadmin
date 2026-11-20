@@ -4,11 +4,12 @@ import { useParams, Link, useLocation } from 'react-router-dom';
 import { useGetAuditEntriesQuery } from '../services/api';
 import type { AuditEntry } from '../services/api';
 import { ChevronDown, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useShopName } from './shop-name';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { formatDateTime } from '../utils/date';
 import { ENTITY_TYPE_COLORS, ENTITY_TYPE_LABELS, actionLabel, entityTypeLabel } from './shop-activity-labels';
 
-const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order'] as const;
+const ENTITY_TYPES = ['all', 'product', 'category', 'shop', 'staff', 'subscription', 'customer', 'order', 'optionGroup'] as const;
 
 function formatValue(v: unknown): string {
   if (v === null || v === undefined) return '—';
@@ -76,7 +77,9 @@ export function ShopActivityPage() {
   usePageTitle('Activity');
   const { shopId } = useParams<{ shopId: string }>();
   const location = useLocation();
-  const shopName = (location.state as { shopName?: string })?.shopName ?? shopId;
+  const resolvedName = useShopName(shopId);
+  // Router state gives an instant name when arriving from the shops list; the query covers direct links/refresh.
+  const shopName = resolvedName ?? (location.state as { shopName?: string } | null)?.shopName ?? 'Shop';
   const [page, setPage] = useState(1);
   const [entityFilter, setEntityFilter] = useState<string>('all');
   const pageSize = 20;
