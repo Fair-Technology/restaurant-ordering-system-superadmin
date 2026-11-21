@@ -67,6 +67,7 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
   return (
     <aside
       {...(closedOnMobile ? { inert: true } : {})}
+      aria-hidden={closedOnMobile ? true : undefined}
       className={`w-56 flex-shrink-0 flex flex-col glass-card rounded-none border-r border-white/30 min-h-screen
         fixed inset-y-0 left-0 z-40 transform transition-transform duration-200 overflow-y-auto
         md:static md:z-auto md:translate-x-0 md:sticky md:top-0 md:overflow-visible
