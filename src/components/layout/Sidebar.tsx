@@ -104,9 +104,14 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
             Orders
           </NavLink>
         ) : (
-          <span className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 opacity-40 cursor-not-allowed select-none">
-            <ShoppingBag className="w-4 h-4 flex-shrink-0" />
+          <span
+            role="link"
+            aria-disabled="true"
+            className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-400 opacity-40 cursor-not-allowed select-none"
+          >
+            <ShoppingBag className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
             Orders
+            <span className="sr-only">(unavailable — open a shop first)</span>
           </span>
         )}
         <NavLink to="/rejection-watch" className={navLinkClass} onClick={onClose}>

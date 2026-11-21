@@ -56,3 +56,45 @@ describe('Sidebar drawer inertness', () => {
     expect(aside.hasAttribute('aria-hidden')).toBe(false);
   });
 });
+
+const renderAt = (path: string) => {
+  stubViewport(true);
+  return render(
+    <MemoryRouter initialEntries={[path]}>
+      <Sidebar />
+    </MemoryRouter>,
+  );
+};
+
+describe('Sidebar active link', () => {
+  it('marks only the active link with aria-current="page"', () => {
+    renderAt('/plans');
+    expect(screen.getByRole('link', { name: 'Plans' }).getAttribute('aria-current')).toBe('page');
+    const current = screen.getAllByRole('link').filter((a) => a.hasAttribute('aria-current'));
+    expect(current).toHaveLength(1);
+  });
+
+  it('marks Dashboard (not every link) as current on /', () => {
+    renderAt('/');
+    expect(screen.getByRole('link', { name: 'Dashboard' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('link', { name: 'Shops' }).hasAttribute('aria-current')).toBe(false);
+  });
+});
+
+describe('Sidebar Orders item', () => {
+  it('is an aria-disabled, non-focusable link without a shop in the URL', () => {
+    renderAt('/plans');
+    const orders = screen.getByText('Orders').closest('span[role="link"]')!;
+    expect(orders.getAttribute('aria-disabled')).toBe('true');
+    expect(orders.hasAttribute('tabindex')).toBe(false);
+    expect(orders.hasAttribute('href')).toBe(false);
+    expect(screen.getByText(/unavailable/).className).toContain('sr-only');
+  });
+
+  it('is a real link under /shops/:shopId', () => {
+    renderAt('/shops/abc');
+    const orders = screen.getByRole('link', { name: 'Orders' });
+    expect(orders.getAttribute('href')).toBe('/shops/abc/orders');
+    expect(orders.hasAttribute('aria-disabled')).toBe(false);
+  });
+});

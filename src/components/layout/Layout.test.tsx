@@ -49,4 +49,8 @@ describe('Layout', () => {
     expect(html).toMatch(/<a[^>]*href="#main"[^>]*>Skip to content<\/a>/);
     expect(html).toMatch(/<main[^>]*\sid="main"/);
   });
+
+  it('lets the main landmark receive programmatic focus without joining the tab order', () => {
+    expect(html).toMatch(/<main[^>]*\stabindex="-1"/);
+  });
 });

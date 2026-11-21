@@ -40,7 +40,7 @@ export function Layout() {
         />
       )}
 
-      <main id="main" className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
+      <main id="main" tabIndex={-1} className="flex-1 min-w-0 p-4 md:p-8 overflow-y-auto">
         {/* Mobile-only bar: the sidebar is a drawer below md. */}
         <div className="md:hidden flex items-center gap-2 mb-4">
           <button
