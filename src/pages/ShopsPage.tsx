@@ -255,33 +255,33 @@ export function ShopsPage() {
                       <div className="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 py-1">
                         <Link
                           to={`/shops/${shop.id}/subscription`}
-                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors shrink-0"
                         >
                           Subscription
                         </Link>
                         <Link
                           to={`/shops/${shop.id}/usage`}
-                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors shrink-0"
                         >
                           Usage
                         </Link>
                         <Link
                           to={`/shops/${shop.id}/activity`}
                           state={{ shopName: shop.name }}
-                          className="inline-flex items-center gap-1 py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          className="inline-flex items-center gap-1 py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors shrink-0"
                         >
                           Activity
                           <ArrowRight className="w-3 h-3" />
                         </Link>
                         {!canWrite && !shop.isDeleted && (
-                          <span className="text-gray-500 text-xs font-medium">
+                          <span className="text-gray-500 text-xs font-medium shrink-0">
                             {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
                           </span>
                         )}
                         {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => openLimit(shop)}
-                            className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                            className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors shrink-0"
                           >
                             {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
                           </button>
@@ -289,7 +289,7 @@ export function ShopsPage() {
                         {canWrite && !shop.isDeleted && (
                           <button
                             onClick={() => setOfflineTarget(shop)}
-                            className={`inline-flex items-center py-2 ${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
+                            className={`inline-flex items-center py-2 ${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors shrink-0`}
                           >
                             {offlineActionLabel(shop, status)}
                           </button>
@@ -297,7 +297,7 @@ export function ShopsPage() {
                         {canWrite && shop.isDeleted && (
                           <button
                             onClick={() => setRestoreTarget(shop)}
-                            className="inline-flex items-center py-2 text-green-700 hover:text-green-900 text-xs font-medium transition-colors"
+                            className="inline-flex items-center py-2 text-green-700 hover:text-green-900 text-xs font-medium transition-colors shrink-0"
                           >
                             Restore
                           </button>
