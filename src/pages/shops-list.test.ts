@@ -66,6 +66,7 @@ describe('filterShops', () => {
     expect(filterShops(shops, 'pasta ', false).map((s) => s.id)).toEqual(['1']);
     expect(filterShops(shops, '  ma  ', false).map((s) => s.id)).toEqual(['1']);
     expect(filterShops(shops, '   ', false).map((s) => s.id)).toEqual(['1', '2']);
+    expect(filterShops(shops, '   ', true).map((s) => s.id)).toEqual(['1', '2', '3']);
   });
 });
 

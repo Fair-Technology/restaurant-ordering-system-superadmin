@@ -22,3 +22,6 @@ npm-debug.log*
 
 # Local browser-verification harness (stub API + Playwright script)
 .harness/
+
+# Git worktrees created inside the repo (other agents' working copies)
+.worktrees/
