@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ShopSummaryDto } from '../services/api';
-import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
+import { PAGE_SIZE, buildSuperadminOfflineRequest, countShops, filterShops, pageOf } from './shops-list';
 
 // Only the fields these helpers read are filled in; the cast stands in for the rest of the summary.
 const shop = (over: Partial<ShopSummaryDto>): ShopSummaryDto =>
@@ -66,6 +66,21 @@ describe('filterShops', () => {
     expect(filterShops(shops, 'pasta ', false).map((s) => s.id)).toEqual(['1']);
     expect(filterShops(shops, '  ma  ', false).map((s) => s.id)).toEqual(['1']);
     expect(filterShops(shops, '   ', false).map((s) => s.id)).toEqual(['1', '2']);
+  });
+});
+
+describe('countShops', () => {
+  it('counts nothing for an empty list', () => {
+    expect(countShops([])).toEqual({ active: 0, deleted: 0 });
+  });
+
+  it('counts every shop as active when none are deleted', () => {
+    expect(countShops([shop({ id: '1' }), shop({ id: '2' })])).toEqual({ active: 2, deleted: 0 });
+  });
+
+  it('separates active from soft-deleted shops', () => {
+    const shops = [shop({ id: '1' }), shop({ id: '2', isDeleted: true }), shop({ id: '3' })];
+    expect(countShops(shops)).toEqual({ active: 2, deleted: 1 });
   });
 });
 

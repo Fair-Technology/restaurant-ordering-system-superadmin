@@ -19,7 +19,7 @@ import { Store, ArrowRight, Search, ChevronLeft, ChevronRight } from 'lucide-rea
 import { getShopStatus, offlineActionLabel, SUPERADMIN_REASON_MAX, type ShopStatusKind } from './shop-status';
 import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
-import { PAGE_SIZE, buildSuperadminOfflineRequest, filterShops, pageOf } from './shops-list';
+import { PAGE_SIZE, buildSuperadminOfflineRequest, countShops, filterShops, pageOf } from './shops-list';
 import { useCanWrite } from '../auth/platformAccess';
 
 const STATUS_STYLE: Record<ShopStatusKind, string> = {
@@ -51,6 +51,11 @@ export function ShopsPage() {
   const [setMissedOrdersPauseLimit, { isLoading: isSavingLimit }] =
     useSetMissedOrdersPauseLimitMutation();
 
+  const { active: activeCount, deleted: deletedCount } = countShops(shops?.shops ?? []);
+  const subtitle =
+    showDeleted && deletedCount > 0
+      ? `${activeCount} shops (${deletedCount} deleted)`
+      : `${activeCount} shops total`;
   const filtered = filterShops(shops?.shops ?? [], search, showDeleted);
 
   const closeRestore = () => {
@@ -135,7 +140,7 @@ export function ShopsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-indigo-900">All Shops</h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            {shops ? `${shops.total} shops total` : ''}
+            {shops ? subtitle : ''}
           </p>
         </div>
         <div className="flex items-center gap-4 flex-wrap w-full sm:w-auto">
