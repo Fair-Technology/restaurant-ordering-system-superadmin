@@ -149,12 +149,14 @@ export function PlansPage() {
                     <div className="inline-flex items-center gap-2">
                       <Link
                         to={`/plans/${plan.id}`}
+                        aria-label={`Edit ${plan.name}`}
                         className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                       >
                         Edit
                       </Link>
                       <Link
                         to={`/plans/${plan.id}/pricing`}
+                        aria-label={`Pricing for ${plan.name}`}
                         className="text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
                       >
                         Pricing
