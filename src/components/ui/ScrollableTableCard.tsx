@@ -4,20 +4,9 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
  * Wraps a <table> in a glass card that scrolls horizontally instead of
  * overflowing the card. Shows a right-edge fade while more content remains
  * to the right. With `bare`, the outer card wrapper is skipped so the
- * caller's own card provides the chrome. Optional `header` / `footer` render
- * inside the card above / below the scroll container (they don't scroll).
+ * caller's own card provides the chrome.
  */
-export function ScrollableTableCard({
-  header,
-  footer,
-  children,
-  bare = false,
-}: {
-  header?: ReactNode;
-  footer?: ReactNode;
-  children: ReactNode;
-  bare?: boolean;
-}) {
+export function ScrollableTableCard({ children, bare = false }: { children: ReactNode; bare?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
   const [canScrollRight, setCanScrollRight] = useState(false);
 
@@ -39,11 +28,9 @@ export function ScrollableTableCard({
 
   const inner = (
     <>
-      {header}
       <div ref={ref} onScroll={check} className="overflow-x-auto" data-testid="scroll-container">
         {children}
       </div>
-      {footer}
       {canScrollRight && (
         <div
           aria-hidden="true"

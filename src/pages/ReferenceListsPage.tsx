@@ -7,7 +7,6 @@ import type { AllergenDef, FulfilmentMode, ReferenceListsResultDto, TaxRateRow }
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
-import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 
 /** Common shape of allergen, additive and tax-class rows. */
 type ReferenceEntry = Pick<AllergenDef, 'id' | 'labels' | 'isActive'>;
@@ -231,22 +230,19 @@ function EntryTable<T extends ReferenceEntry>({
   const columnCount = extraHeader ? 5 : 4;
 
   return (
-    <ScrollableTableCard
-      header={
-        <div className="px-6 py-4 border-b border-white/30 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-indigo-900">{title}</h2>
-          <WriteOnly>
-            <button
-              onClick={onAdd}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
-            >
-              + {addLabel}
-            </button>
-          </WriteOnly>
-        </div>
-      }
-    >
-      <table className={`w-full text-sm ${extraHeader ? 'min-w-[620px]' : 'min-w-[560px]'}`}>
+    <div className="glass-card overflow-hidden">
+      <div className="px-6 py-4 border-b border-white/30 flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-indigo-900">{title}</h2>
+        <WriteOnly>
+          <button
+            onClick={onAdd}
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors"
+          >
+            + {addLabel}
+          </button>
+        </WriteOnly>
+      </div>
+      <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/30">
             <th className="text-left px-6 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
@@ -278,7 +274,7 @@ function EntryTable<T extends ReferenceEntry>({
                     <span className="font-mono text-xs text-gray-500">{row.id}</span>
                   )}
                 </td>
-                <td className="px-4 py-2 min-w-[140px]">
+                <td className="px-4 py-2">
                   <input
                     value={row.labels.de}
                     onChange={(e) =>
@@ -287,7 +283,7 @@ function EntryTable<T extends ReferenceEntry>({
                     className="border border-gray-200 rounded px-2 py-1 text-xs w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   />
                 </td>
-                <td className="px-4 py-2 min-w-[140px]">
+                <td className="px-4 py-2">
                   <input
                     value={row.labels.en}
                     onChange={(e) =>
@@ -310,7 +306,7 @@ function EntryTable<T extends ReferenceEntry>({
           })}
         </tbody>
       </table>
-    </ScrollableTableCard>
+    </div>
   );
 }
 
@@ -337,73 +333,12 @@ function TaxRatesSection({
   }
 
   return (
-    <ScrollableTableCard
-      header={
-        <div className="px-6 py-4 border-b border-white/30">
-          <h2 className="text-sm font-semibold text-indigo-900">Tax rates</h2>
-          <p className="text-xs text-gray-500 mt-0.5">Existing rows can&rsquo;t be edited — add a new row instead. Every active class needs a rate in effect now for all three modes.</p>
-        </div>
-      }
-      footer={
-        <WriteOnly>
-          <div className="px-6 py-4 border-t border-white/30 flex flex-wrap items-end gap-3">
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">Class</label>
-              <select
-                value={taxClassId}
-                onChange={(e) => setTaxClassId(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              >
-                {taxClasses.length === 0 && <option value="">No tax classes yet</option>}
-                {taxClasses.map((c) => (
-                  <option key={c.id} value={c.id}>{c.labels.en || c.id}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">Mode</label>
-              <select
-                value={mode}
-                onChange={(e) => setMode(e.target.value as FulfilmentMode | 'all')}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              >
-                <option value="all">All three</option>
-                {FULFILMENT_MODES.map((m) => (
-                  <option key={m} value={m}>{MODE_LABELS[m]}</option>
-                ))}
-              </select>
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">Rate %</label>
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={pct}
-                onChange={(e) => setPct(e.target.value)}
-                className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <label className="text-xs text-gray-500">Starts at</label>
-              <input
-                type="datetime-local"
-                value={startsAt}
-                onChange={(e) => setStartsAt(e.target.value)}
-                className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
-              />
-            </div>
-            <button
-              onClick={handleAdd}
-              className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors px-2 py-2"
-            >
-              + Add rate
-            </button>
-          </div>
-        </WriteOnly>
-      }
-    >
-      <table className="w-full min-w-[640px] text-sm">
+    <div className="glass-card overflow-hidden">
+      <div className="px-6 py-4 border-b border-white/30">
+        <h2 className="text-sm font-semibold text-indigo-900">Tax rates</h2>
+        <p className="text-xs text-gray-500 mt-0.5">Existing rows can&rsquo;t be edited — add a new row instead. Every active class needs a rate in effect now for all three modes.</p>
+      </div>
+      <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/30">
             <th className="text-left px-6 py-2 text-xs font-medium text-gray-500 uppercase tracking-wider">Class</th>
@@ -430,6 +365,63 @@ function TaxRatesSection({
           ))}
         </tbody>
       </table>
-    </ScrollableTableCard>
+
+      <WriteOnly>
+      <div className="px-6 py-4 border-t border-white/30 flex flex-wrap items-end gap-3">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500">Class</label>
+          <select
+            value={taxClassId}
+            onChange={(e) => setTaxClassId(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          >
+            {taxClasses.length === 0 && <option value="">No tax classes yet</option>}
+            {taxClasses.map((c) => (
+              <option key={c.id} value={c.id}>{c.labels.en || c.id}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500">Mode</label>
+          <select
+            value={mode}
+            onChange={(e) => setMode(e.target.value as FulfilmentMode | 'all')}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          >
+            <option value="all">All three</option>
+            {FULFILMENT_MODES.map((m) => (
+              <option key={m} value={m}>{MODE_LABELS[m]}</option>
+            ))}
+          </select>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500">Rate %</label>
+          <input
+            type="number"
+            step="0.01"
+            min="0"
+            value={pct}
+            onChange={(e) => setPct(e.target.value)}
+            className="w-20 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-500">Starts at</label>
+          <input
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+            className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+        </div>
+        <button
+          onClick={handleAdd}
+          className="text-xs text-indigo-600 hover:text-indigo-800 font-medium transition-colors px-2 py-2"
+        >
+          + Add rate
+        </button>
+      </div>
+      </WriteOnly>
+    </div>
   );
 }

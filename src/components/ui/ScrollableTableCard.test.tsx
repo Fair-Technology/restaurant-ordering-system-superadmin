@@ -67,26 +67,4 @@ describe('ScrollableTableCard', () => {
     expect(screen.getByTestId('scroll-affordance')).toBeTruthy();
     restore();
   });
-
-  it('renders header above and footer below the scroll container, outside it', () => {
-    render(
-      <ScrollableTableCard header={<h2>Head</h2>} footer={<p>Foot</p>}>
-        <table><tbody><tr><td>x</td></tr></tbody></table>
-      </ScrollableTableCard>,
-    );
-    const container = screen.getByTestId('scroll-container');
-    const head = screen.getByText('Head');
-    const foot = screen.getByText('Foot');
-    expect(container.contains(head)).toBe(false);
-    expect(container.contains(foot)).toBe(false);
-    expect(head.compareDocumentPosition(container) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(container.compareDocumentPosition(foot) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(container.parentElement!.className).toContain('glass-card');
-  });
-
-  it('works unchanged without header/footer', () => {
-    const restore = renderWith(375, 375);
-    expect(screen.getByTestId('scroll-container').parentElement!.children).toHaveLength(1);
-    restore();
-  });
 });
