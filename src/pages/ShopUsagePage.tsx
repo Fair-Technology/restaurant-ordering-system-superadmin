@@ -6,6 +6,7 @@ import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { formatDateTime } from '../utils/date';
 import { RejectionFlagBadges } from '../components/RejectionFlagBadges';
 import { WriteOnly } from '../auth/WriteOnly';
+import { ShopLoadErrorState } from '../components/ShopLoadErrorState';
 import { useShopName } from './shop-name';
 
 export function ShopUsagePage() {
@@ -13,7 +14,7 @@ export function ShopUsagePage() {
   const { shopId } = useParams<{ shopId: string }>();
   const shopName = useShopName(shopId);
   const navigate = useNavigate();
-  const { data, isLoading, isError } = useGetShopUsageQuery({ shopId: shopId! });
+  const { data, isLoading, isError, error } = useGetShopUsageQuery({ shopId: shopId! });
   const [reconcile, { isLoading: isReconciling, data: reconcileData }] = useReconcileShopUsageMutation();
   const [manualReconcileClicked, setManualReconcileClicked] = useState(false);
   const autoReconciled = useRef(false);
@@ -29,9 +30,8 @@ export function ShopUsagePage() {
   }, [shopId, isLoading, isError, data, reconcile]);
 
   if (isLoading) return <LoadingScreen title="Loading usage" subtitle="Fetching usage counters and reconciliation status." />;
-  if (isError || !data) return (
-    <div className="glass-card p-12 text-center text-sm text-red-500">Failed to load usage.</div>
-  );
+  const status = typeof (error as { status?: unknown })?.status === 'number' ? (error as { status: number }).status : undefined;
+  if (isError || !data) return <ShopLoadErrorState status={status} resource="usage" />;
 
   const rejections = data.rejections;
   const usage = reconcileData?.usage ?? data.usage;

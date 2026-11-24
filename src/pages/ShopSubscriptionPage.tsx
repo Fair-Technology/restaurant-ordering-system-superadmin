@@ -21,6 +21,7 @@ import {
   planOverrideError,
   type LimitKey,
 } from './subscription-override';
+import { ShopLoadErrorState } from '../components/ShopLoadErrorState';
 import { useShopName } from './shop-name';
 import { WriteOnly } from '../auth/WriteOnly';
 
@@ -37,7 +38,7 @@ export function ShopSubscriptionPage() {
   const { shopId } = useParams<{ shopId: string }>();
   const navigate = useNavigate();
   const shopName = useShopName(shopId);
-  const { data, isLoading, isError, isFetching } = useGetShopSubscriptionQuery({ shopId: shopId! });
+  const { data, isLoading, isError, error, isFetching } = useGetShopSubscriptionQuery({ shopId: shopId! });
   // The override picker lists every plan an operator may assign, hidden ones included.
   const { data: plansData } = useGetPlansQuery({ includeHidden: true });
   const [override, { isLoading: isOverriding }] = useOverrideShopSubscriptionMutation();
@@ -148,9 +149,8 @@ export function ShopSubscriptionPage() {
   }
 
   if (isLoading) return <LoadingScreen title="Loading subscription" subtitle="Fetching current plan and billing status." />;
-  if (isError || !data) return (
-    <div className="glass-card p-12 text-center text-sm text-red-500">Failed to load subscription.</div>
-  );
+  const status = typeof (error as { status?: unknown })?.status === 'number' ? (error as { status: number }).status : undefined;
+  if (isError || !data) return <ShopLoadErrorState status={status} resource="subscription" />;
 
   const { subscription, plan, entitlements } = data;
   const plans = plansData?.plans ?? [];
