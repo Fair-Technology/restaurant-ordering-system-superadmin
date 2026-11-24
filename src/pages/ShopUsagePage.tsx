@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { usePageTitle } from '../features/layout/usePageTitle';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useGetShopUsageQuery, useReconcileShopUsageMutation } from '../services/api';
@@ -14,6 +15,18 @@ export function ShopUsagePage() {
   const navigate = useNavigate();
   const { data, isLoading, isError } = useGetShopUsageQuery({ shopId: shopId! });
   const [reconcile, { isLoading: isReconciling, data: reconcileData }] = useReconcileShopUsageMutation();
+  const [manualReconcileClicked, setManualReconcileClicked] = useState(false);
+  const autoReconciled = useRef(false);
+
+  // Self-heal a stale "Last Reconciled": reconcile once per shop when the page loads.
+  useEffect(() => {
+    autoReconciled.current = false;
+  }, [shopId]);
+  useEffect(() => {
+    if (autoReconciled.current || isLoading || isError || !data) return;
+    autoReconciled.current = true;
+    reconcile({ shopId: shopId! });
+  }, [shopId, isLoading, isError, data, reconcile]);
 
   if (isLoading) return <LoadingScreen title="Loading usage" subtitle="Fetching usage counters and reconciliation status." />;
   if (isError || !data) return (
@@ -62,7 +75,7 @@ export function ShopUsagePage() {
           {data.orderLimit.limitReached ? 'ordering paused' : 'taking orders'}
         </p>
 
-        {reconcileData && (
+        {manualReconcileClicked && reconcileData && (
           <p className="text-green-600 text-sm">
             Reconciled: counted {reconcileData.reconciledCount} accepted orders this month.
           </p>
@@ -70,7 +83,10 @@ export function ShopUsagePage() {
 
         <WriteOnly>
           <button
-            onClick={() => reconcile({ shopId: shopId! })}
+            onClick={() => {
+              setManualReconcileClicked(true);
+              reconcile({ shopId: shopId! });
+            }}
             disabled={isReconciling}
             className="border border-indigo-300 text-indigo-700 px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-50 disabled:opacity-50 transition-colors"
           >
