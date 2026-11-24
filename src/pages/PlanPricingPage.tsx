@@ -79,13 +79,15 @@ function PricingRow({ planId, currency, existing, isFree }: PricingRowProps) {
         <span className="flex-1 text-sm text-gray-600">
           {isFree ? (
             <span className="text-gray-400">Free</span>
+          ) : !existing ? (
+            <span className="text-gray-400 italic">Not configured</span>
           ) : (
             <>
-              <span className="font-mono">{monthly}</span>
+              <span className="font-mono">{formatCents(existing.monthlyAmountCents)}</span>
               <span className="text-gray-400 mx-1">/mo</span>
-              {parseFloat(yearly) > 0 && (
+              {existing.yearlyAmountCents > 0 && (
                 <>
-                  <span className="font-mono">{yearly}</span>
+                  <span className="font-mono">{formatCents(existing.yearlyAmountCents)}</span>
                   <span className="text-gray-400 mx-1">/yr</span>
                 </>
               )}
