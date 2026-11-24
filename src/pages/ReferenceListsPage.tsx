@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../utils/apiError';
 import { formatDateTime } from '../utils/date';
 import type { AllergenDef, FulfilmentMode, ReferenceListsResultDto, TaxRateRow } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
@@ -52,8 +53,9 @@ export function ReferenceListsPage() {
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Country</label>
+          <label htmlFor="reference-country" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Country</label>
           <input
+            id="reference-country"
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value.toUpperCase().slice(0, 2))}
             maxLength={2}
@@ -178,6 +180,7 @@ function ReferenceListsEditor({
             <input
               type="radio"
               name="defaultTaxClass"
+              aria-label={`Set ${row.labels.en || row.id} as default tax class`}
               checked={draft.defaultTaxClassId === row.id}
               onChange={() => {
                 setSaved(false);
@@ -242,6 +245,7 @@ function EntryTable<T extends ReferenceEntry>({
           </button>
         </WriteOnly>
       </div>
+      <ScrollableTableCard bare>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/30">
@@ -306,6 +310,7 @@ function EntryTable<T extends ReferenceEntry>({
           })}
         </tbody>
       </table>
+      </ScrollableTableCard>
     </div>
   );
 }
@@ -338,6 +343,7 @@ function TaxRatesSection({
         <h2 className="text-sm font-semibold text-indigo-900">Tax rates</h2>
         <p className="text-xs text-gray-500 mt-0.5">Existing rows can&rsquo;t be edited — add a new row instead. Every active class needs a rate in effect now for all three modes.</p>
       </div>
+      <ScrollableTableCard bare>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/30">
@@ -365,12 +371,14 @@ function TaxRatesSection({
           ))}
         </tbody>
       </table>
+      </ScrollableTableCard>
 
       <WriteOnly>
       <div className="px-6 py-4 border-t border-white/30 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Class</label>
+          <label htmlFor="tax-rate-class" className="text-xs text-gray-500">Class</label>
           <select
+            id="tax-rate-class"
             value={taxClassId}
             onChange={(e) => setTaxClassId(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -382,8 +390,9 @@ function TaxRatesSection({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Mode</label>
+          <label htmlFor="tax-rate-mode" className="text-xs text-gray-500">Mode</label>
           <select
+            id="tax-rate-mode"
             value={mode}
             onChange={(e) => setMode(e.target.value as FulfilmentMode | 'all')}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -395,8 +404,9 @@ function TaxRatesSection({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Rate %</label>
+          <label htmlFor="tax-rate-pct" className="text-xs text-gray-500">Rate %</label>
           <input
+            id="tax-rate-pct"
             type="number"
             step="0.01"
             min="0"
@@ -406,8 +416,9 @@ function TaxRatesSection({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Starts at</label>
+          <label htmlFor="tax-rate-starts-at" className="text-xs text-gray-500">Starts at</label>
           <input
+            id="tax-rate-starts-at"
             type="datetime-local"
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
