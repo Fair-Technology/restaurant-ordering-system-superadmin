@@ -52,8 +52,9 @@ export function ReferenceListsPage() {
           </p>
         </div>
         <div className="flex flex-col gap-1.5">
-          <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Country</label>
+          <label htmlFor="reference-country" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Country</label>
           <input
+            id="reference-country"
             value={countryCode}
             onChange={(e) => setCountryCode(e.target.value.toUpperCase().slice(0, 2))}
             maxLength={2}
@@ -178,6 +179,7 @@ function ReferenceListsEditor({
             <input
               type="radio"
               name="defaultTaxClass"
+              aria-label={`Set ${row.labels.en || row.id} as default tax class`}
               checked={draft.defaultTaxClassId === row.id}
               onChange={() => {
                 setSaved(false);
@@ -369,8 +371,9 @@ function TaxRatesSection({
       <WriteOnly>
       <div className="px-6 py-4 border-t border-white/30 flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Class</label>
+          <label htmlFor="tax-rate-class" className="text-xs text-gray-500">Class</label>
           <select
+            id="tax-rate-class"
             value={taxClassId}
             onChange={(e) => setTaxClassId(e.target.value)}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -382,8 +385,9 @@ function TaxRatesSection({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Mode</label>
+          <label htmlFor="tax-rate-mode" className="text-xs text-gray-500">Mode</label>
           <select
+            id="tax-rate-mode"
             value={mode}
             onChange={(e) => setMode(e.target.value as FulfilmentMode | 'all')}
             className="border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -395,8 +399,9 @@ function TaxRatesSection({
           </select>
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Rate %</label>
+          <label htmlFor="tax-rate-pct" className="text-xs text-gray-500">Rate %</label>
           <input
+            id="tax-rate-pct"
             type="number"
             step="0.01"
             min="0"
@@ -406,8 +411,9 @@ function TaxRatesSection({
           />
         </div>
         <div className="flex flex-col gap-1">
-          <label className="text-xs text-gray-500">Starts at</label>
+          <label htmlFor="tax-rate-starts-at" className="text-xs text-gray-500">Starts at</label>
           <input
+            id="tax-rate-starts-at"
             type="datetime-local"
             value={startsAt}
             onChange={(e) => setStartsAt(e.target.value)}
