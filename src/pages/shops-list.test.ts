@@ -68,6 +68,17 @@ describe('filterShops', () => {
     expect(filterShops(shops, '   ', false).map((s) => s.id)).toEqual(['1', '2']);
     expect(filterShops(shops, '   ', true).map((s) => s.id)).toEqual(['1', '2', '3']);
   });
+
+  it('ignores accents: "cafe" finds "Café am Rhein"', () => {
+    const list = [...shops, shop({ id: '4', name: 'Café am Rhein', slug: 'cafe-am-rhein' })];
+    expect(filterShops(list, 'cafe', false).map((s) => s.id)).toEqual(['4']);
+    expect(filterShops(list, 'CAFÉ', false).map((s) => s.id)).toEqual(['4']);
+  });
+
+  it('matches a slug fragment that is not in the name', () => {
+    const list = [...shops, shop({ id: '5', name: 'Zum Fährmann', slug: 'rhein-faehre' })];
+    expect(filterShops(list, 'rhein', false).map((s) => s.id)).toEqual(['5']);
+  });
 });
 
 describe('countShops', () => {

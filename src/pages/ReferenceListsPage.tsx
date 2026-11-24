@@ -5,6 +5,7 @@ import { apiErrorMessage } from '../utils/apiError';
 import { formatDateTime } from '../utils/date';
 import type { AllergenDef, FulfilmentMode, ReferenceListsResultDto, TaxRateRow } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
+import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { FULFILMENT_MODES, buildTaxRateRows, formatBasisPoints } from './tax-rates';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
 
@@ -244,6 +245,7 @@ function EntryTable<T extends ReferenceEntry>({
           </button>
         </WriteOnly>
       </div>
+      <ScrollableTableCard bare>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/30">
@@ -308,6 +310,7 @@ function EntryTable<T extends ReferenceEntry>({
           })}
         </tbody>
       </table>
+      </ScrollableTableCard>
     </div>
   );
 }
@@ -340,6 +343,7 @@ function TaxRatesSection({
         <h2 className="text-sm font-semibold text-indigo-900">Tax rates</h2>
         <p className="text-xs text-gray-500 mt-0.5">Existing rows can&rsquo;t be edited — add a new row instead. Every active class needs a rate in effect now for all three modes.</p>
       </div>
+      <ScrollableTableCard bare>
       <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-white/30">
@@ -367,6 +371,7 @@ function TaxRatesSection({
           ))}
         </tbody>
       </table>
+      </ScrollableTableCard>
 
       <WriteOnly>
       <div className="px-6 py-4 border-t border-white/30 flex flex-wrap items-end gap-3">

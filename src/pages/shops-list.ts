@@ -2,10 +2,20 @@ import type { ShopSummaryDto } from '../services/api';
 
 export const PAGE_SIZE = 20;
 
-/** Deleted shops are hidden unless showDeleted; name search is case-insensitive substring. */
+/** Lowercases and strips diacritics so "Café" and "cafe" compare equal. */
+export function foldForSearch(value: string): string {
+  return value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+}
+
+/**
+ * Deleted shops are hidden unless showDeleted; search is a case- and accent-insensitive
+ * substring match against the shop's name or slug.
+ */
 export function filterShops(shops: readonly ShopSummaryDto[], search: string, showDeleted: boolean): ShopSummaryDto[] {
-  const needle = search.trim().toLowerCase();
-  return shops.filter((s) => (showDeleted || !s.isDeleted) && s.name.toLowerCase().includes(needle));
+  const needle = foldForSearch(search.trim());
+  return shops.filter(
+    (s) => (showDeleted || !s.isDeleted) && (foldForSearch(s.name).includes(needle) || foldForSearch(s.slug).includes(needle)),
+  );
 }
 
 /** Active vs soft-deleted shop counts, derived from the list itself (not the API's `total`). */
