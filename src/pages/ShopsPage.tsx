@@ -187,6 +187,7 @@ export function ShopsPage() {
 
       {!isError && pageItems.length > 0 && (
         <>
+          <div className="hidden sm:block">
           <ScrollableTableCard>
             <table className="w-full text-sm">
               <thead>
@@ -328,6 +329,117 @@ export function ShopsPage() {
               </tbody>
             </table>
           </ScrollableTableCard>
+          </div>
+
+          <ul className="sm:hidden space-y-3" data-testid="shops-cards">
+            {pageItems.map((shop) => {
+              const status = getShopStatus(shop);
+              return (
+                <li
+                  key={shop.id}
+                  data-testid={`shop-card-${shop.id}`}
+                  className={`glass-card divide-y divide-white/30 overflow-hidden ${shop.isDeleted ? 'opacity-60' : ''}`}
+                >
+                  <div className="p-4 space-y-2">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Store className="w-4 h-4 text-indigo-400 flex-shrink-0" />
+                      <span className="font-medium text-indigo-900 break-words min-w-0">{shop.name}</span>
+                      {shop.isDeleted && (
+                        <span className="text-xs bg-red-100 text-red-600 px-1.5 py-0.5 rounded">
+                          {shop.deletedAt ? `Deleted ${formatDate(shop.deletedAt)}` : 'Deleted'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start gap-1">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${STATUS_STYLE[status.kind]}`}>
+                          {status.label}
+                        </span>
+                        {status.ordersPaused && (
+                          <span className="text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">
+                            Orders paused
+                          </span>
+                        )}
+                      </div>
+                      {shop.offlineBySuperadmin && shop.offlineBySuperadminReason && (
+                        <span className="text-xs text-gray-500 break-words">
+                          Reason: {shop.offlineBySuperadminReason}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 px-4 py-3 text-xs">
+                    <dt className="text-gray-500">Slug</dt>
+                    <dd className="text-gray-700 break-all">{shop.slug}</dd>
+                    <dt className="text-gray-500">Currency</dt>
+                    <dd className="text-gray-700">{shop.currency ?? '—'}</dd>
+                    <dt className="text-gray-500">Created</dt>
+                    <dd className="text-gray-700">{formatDate(shop.createdAt)}</dd>
+                  </dl>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 px-4 py-2">
+                      <Link
+                        to={`/shops/${shop.id}/subscription`}
+                        aria-label={`Subscription for ${shop.name}`}
+                        className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                      >
+                        Subscription
+                      </Link>
+                      <Link
+                        to={`/shops/${shop.id}/usage`}
+                        aria-label={`Usage for ${shop.name}`}
+                        className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                      >
+                        Usage
+                      </Link>
+                      <Link
+                        to={`/shops/${shop.id}/activity`}
+                        state={{ shopName: shop.name }}
+                        aria-label={`Activity for ${shop.name}`}
+                        className="inline-flex items-center gap-1 py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                      >
+                        Activity
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                      {!canWrite && !shop.isDeleted && (
+                        <span
+                          aria-label={`${missedOrdersLimitLabel(missedOrdersLimitOf(shop))} for ${shop.name}`}
+                          className="text-gray-500 text-xs font-medium"
+                        >
+                          {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
+                        </span>
+                      )}
+                      {canWrite && !shop.isDeleted && (
+                        <button
+                          onClick={() => openLimit(shop)}
+                          aria-label={`${missedOrdersLimitLabel(missedOrdersLimitOf(shop))} for ${shop.name}`}
+                          className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                        >
+                          {missedOrdersLimitLabel(missedOrdersLimitOf(shop))}
+                        </button>
+                      )}
+                      {canWrite && !shop.isDeleted && (
+                        <button
+                          onClick={() => setOfflineTarget(shop)}
+                          aria-label={`${offlineActionLabel(shop, status)} for ${shop.name}`}
+                          className={`inline-flex items-center py-2 ${shop.offlineBySuperadmin ? 'text-green-700 hover:text-green-900' : 'text-red-600 hover:text-red-800'} text-xs font-medium transition-colors`}
+                        >
+                          {offlineActionLabel(shop, status)}
+                        </button>
+                      )}
+                      {canWrite && shop.isDeleted && (
+                        <button
+                          onClick={() => setRestoreTarget(shop)}
+                          aria-label={`Restore ${shop.name}`}
+                          className="inline-flex items-center py-2 text-green-700 hover:text-green-900 text-xs font-medium transition-colors"
+                        >
+                          Restore
+                        </button>
+                      )}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
 
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-sm text-gray-500">
