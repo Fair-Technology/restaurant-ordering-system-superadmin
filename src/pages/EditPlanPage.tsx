@@ -6,6 +6,7 @@ import { apiErrorMessage } from '../utils/apiError';
 import type { PlanLimit } from '../services/api';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { WriteOnly, WriteFieldset } from '../auth/WriteOnly';
+import { limitKeyLabel } from './subscription-override';
 
 const LIMIT_KEYS = ['ORDERS_PER_MONTH', 'STAFF_ACCOUNTS'];
 
@@ -173,7 +174,7 @@ export function EditPlanPage() {
                 className="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-300"
               >
                 {LIMIT_KEYS.map((k) => (
-                  <option key={k} value={k}>{k}</option>
+                  <option key={k} value={k}>{limitKeyLabel(k)}</option>
                 ))}
               </select>
               <input
