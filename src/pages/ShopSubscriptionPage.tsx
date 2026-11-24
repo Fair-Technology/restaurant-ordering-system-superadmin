@@ -48,6 +48,10 @@ export function ShopSubscriptionPage() {
   const [overrideError, setOverrideError] = useState<string | null>(null);
   // Same as the limit buttons: the card changes only after the refetch lands.
   const [overrideSuccess, setOverrideSuccess] = useState(false);
+  const [confirmOverride, setConfirmOverride] = useState(false);
+  const [confirmLimit, setConfirmLimit] = useState(false);
+  // Earliest selectable expiry: today (local-agnostic ISO date), computed once per render.
+  const todayIsoDate = new Date().toISOString().slice(0, 10);
   const applyingOverride = isOverriding || (overrideSuccess && isFetching);
 
   const [setLimitOverride, { isLoading: isSettingLimit }] = useSetLimitOverrideMutation();
@@ -110,6 +114,28 @@ export function ShopSubscriptionPage() {
     }
   }
 
+  function requestOverride() {
+    setOverrideError(null);
+    setOverrideSuccess(false);
+    const invalid = planOverrideError(selectedPlanId, reason);
+    if (invalid) {
+      setOverrideError(invalid);
+      return;
+    }
+    setConfirmOverride(true);
+  }
+
+  function requestSetLimit() {
+    setLimitError(null);
+    setLimitDone(null);
+    const invalid = limitOverrideError(limitValue, limitReason);
+    if (invalid) {
+      setLimitError(invalid);
+      return;
+    }
+    setConfirmLimit(true);
+  }
+
   async function handleClearLimit() {
     setLimitError(null);
     setLimitDone(null);
@@ -130,6 +156,7 @@ export function ShopSubscriptionPage() {
   const plans = plansData?.plans ?? [];
   const inForcePlan = plans.find((p) => p.id === entitlements.planId);
   const limitOverride = subscription.limitOverride ?? null;
+  const selectedPlan = plans.find((p) => p.id === selectedPlanId);
 
   return (
     <div>
@@ -253,8 +280,9 @@ export function ShopSubscriptionPage() {
           )}
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Plan</label>
+            <label htmlFor="override-plan" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Plan</label>
             <select
+              id="override-plan"
               value={selectedPlanId}
               onChange={(e) => setSelectedPlanId(e.target.value)}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -267,8 +295,9 @@ export function ShopSubscriptionPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reason (required)</label>
+            <label htmlFor="override-reason" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reason (required)</label>
             <input
+              id="override-reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               placeholder="e.g. Trial extension for partner"
@@ -277,10 +306,12 @@ export function ShopSubscriptionPage() {
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Expires At (optional)</label>
+            <label htmlFor="override-expires-at" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Expires At (optional)</label>
             <input
+              id="override-expires-at"
               type="date"
               value={expiresAt}
+              min={todayIsoDate}
               onChange={(e) => setExpiresAt(e.target.value)}
               className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
             />
@@ -291,7 +322,7 @@ export function ShopSubscriptionPage() {
 
           <WriteOnly>
             <button
-              onClick={handleOverride}
+              onClick={requestOverride}
               disabled={applyingOverride}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
             >
@@ -344,8 +375,9 @@ export function ShopSubscriptionPage() {
           <WriteOnly>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limit</label>
+              <label htmlFor="limit-key" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Limit</label>
               <select
+                id="limit-key"
                 value={limitKey}
                 onChange={(e) => setLimitKey(e.target.value as LimitKey)}
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
@@ -356,8 +388,9 @@ export function ShopSubscriptionPage() {
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Value (-1 = unlimited)</label>
+              <label htmlFor="limit-value" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Value (-1 = unlimited)</label>
               <input
+                id="limit-value"
                 type="number"
                 min={-1}
                 step={1}
@@ -367,8 +400,9 @@ export function ShopSubscriptionPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reason (required)</label>
+              <label htmlFor="limit-reason" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Reason (required)</label>
               <input
+                id="limit-reason"
                 value={limitReason}
                 onChange={(e) => setLimitReason(e.target.value)}
                 placeholder="e.g. Opening week"
@@ -376,10 +410,12 @@ export function ShopSubscriptionPage() {
               />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wide">Expires At (optional)</label>
+              <label htmlFor="limit-expires-at" className="text-xs font-medium text-gray-500 uppercase tracking-wide">Expires At (optional)</label>
               <input
+                id="limit-expires-at"
                 type="date"
                 value={limitExpiresAt}
+                min={todayIsoDate}
                 onChange={(e) => setLimitExpiresAt(e.target.value)}
                 className="border border-gray-200 rounded-lg px-3 py-2 text-sm w-full focus:outline-none focus:ring-2 focus:ring-indigo-300"
               />
@@ -395,7 +431,7 @@ export function ShopSubscriptionPage() {
 
           <WriteOnly>
             <button
-              onClick={handleSetLimit}
+              onClick={requestSetLimit}
               disabled={settingLimit || clearingLimit}
               className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
             >
@@ -405,6 +441,99 @@ export function ShopSubscriptionPage() {
           </WriteOnly>
         </div>
       </div>
+      {confirmOverride && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setConfirmOverride(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-override-title"
+            className="glass-card bg-white p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="confirm-override-title" className="text-lg font-semibold text-indigo-900 mb-2">
+              Apply plan override?
+            </h2>
+            <dl className="text-sm text-gray-600 mb-4 space-y-1">
+              <div>Current plan: {plan?.name ?? subscription.planId} ({subscription.status})</div>
+              <div>New plan: {selectedPlan?.name ?? selectedPlanId}</div>
+              <div>Reason: {reason.trim()}</div>
+              {expiresAt && <div>Expires: {expiresAt}</div>}
+            </dl>
+            {subscription.status === 'active' && (
+              <p className="text-yellow-700 text-xs bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4">
+                This shop has an active paid subscription.
+              </p>
+            )}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setConfirmOverride(false)}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmOverride(false);
+                    void handleOverride();
+                  }}
+                  className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  Confirm
+                </button>
+              </div>
+          </div>
+        </div>
+      )}
+
+      {confirmLimit && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={() => setConfirmLimit(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="confirm-limit-title"
+            className="glass-card bg-white p-6 w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 id="confirm-limit-title" className="text-lg font-semibold text-indigo-900 mb-2">
+              Set limit override?
+            </h2>
+            <dl className="text-sm text-gray-600 mb-4 space-y-1">
+              <div>Limit: {limitKeyLabel(limitKey)}</div>
+              <div>Value: {limitValue === '-1' ? 'Unlimited' : limitValue}</div>
+              <div>Reason: {limitReason.trim()}</div>
+              {limitExpiresAt && <div>Expires: {limitExpiresAt}</div>}
+            </dl>
+            {subscription.status === 'active' && (
+              <p className="text-yellow-700 text-xs bg-yellow-50 border border-yellow-200 rounded-lg px-3 py-2 mb-4">
+                This shop has an active paid subscription.
+              </p>
+            )}
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={() => setConfirmLimit(false)}
+                  className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setConfirmLimit(false);
+                    void handleSetLimit();
+                  }}
+                  className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700"
+                >
+                  Confirm
+                </button>
+              </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
