@@ -4,8 +4,8 @@ Platform-staff console (React + TypeScript + Vite) of the restaurant ordering sy
 
 **How to run it locally is in [README.md → Running locally](README.md#running-locally). Read that rather than duplicating it here.** The facts agents most often get wrong:
 
-- Port **5174**: `npm run dev -- --port 5174 --strictPort`. Use `localhost`, never `127.0.0.1` (Vite binds IPv6 only).
-- Start `rs-backend` first (`http://localhost:7071/api`). Its CORS allow-list is 5173–5176 only.
+- Port **5175**: `npm run dev` (`strictPort` in `vite.config.ts` pins it). Use `localhost`, never `127.0.0.1` (Vite binds IPv6 only).
+- Start `rs-backend` first (`http://localhost:7071/api`). Its CORS allow-list is 5173, 5174 and 5175 only.
 - `VITE_API_BASE_URL` must end in `/api`; this app does not append it.
 - Sign-in is the Microsoft **workforce** tenant (`VITE_MSAL_AUTHORITY`). It can't be automated; e2e tests use a captured session (`rs-e2e`, `npm run auth:superadmin`).
 - The API client (`src/services/api.ts`) is **generated** from `openapi/swagger.json` (a copy of the `rs-backend` spec) via `npm run openapi:generate` (config: `openapi/rtk-query.config.cjs`, must keep `tag: true`). Don't hand-edit it.

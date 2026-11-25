@@ -15,7 +15,7 @@ npm start                 # = npm run build && func start → http://localhost:7
 
 - Needs Azure Functions Core Tools v4 (`func`) and the backend's own `local.settings.json`. That file holds live dev credentials and isn't committed; ask for it.
 - The local backend talks to the **shared dev** Cosmos DB and storage (no Azurite). Its three timers are switched off locally (`AzureWebJobs.<timer>.Disabled = true`); the deployed dev app runs them.
-- Its CORS allow-list is exactly `http://localhost:5173`–`http://localhost:5176`. An app served from any other origin (including `127.0.0.1`) will have its API calls blocked.
+- Its CORS allow-list is exactly `http://localhost:5173`, `http://localhost:5174` and `http://localhost:5175`. An app served from any other origin (including `127.0.0.1`) will have its API calls blocked.
 
 Quick check: `curl -s -o /dev/null -w '%{http_code}\n' http://localhost:7071/api/shops/public` → `200`.
 
@@ -33,28 +33,27 @@ Create `.env.local` in this folder (it's git-ignored). The app reads:
 
 Platform operators sign in through the workforce tenant, so in practice set `VITE_MSAL_AUTHORITY` and leave the two `TENANT_*` values out.
 
-### 3. Run on port 5174
+### 3. Run on port 5175
 
 ```bash
 npm install
-npm run dev -- --port 5174 --strictPort
+npm run dev
 ```
 
-Open **http://localhost:5174**. Use `localhost`, not `127.0.0.1`: Vite binds IPv6 (`::1`) only, so `http://127.0.0.1:5174` doesn't answer even while the app is running.
+Open **http://localhost:5175**. Use `localhost`, not `127.0.0.1`: Vite binds IPv6 (`::1`) only, so `http://127.0.0.1:5175` doesn't answer even while the app is running.
 
 The port matters:
-- `vite.config.ts` doesn't pin one, so a bare `npm run dev` takes 5173 or whatever is free.
-- `--strictPort` makes Vite fail loudly instead of drifting to another port.
-- MSAL redirects back to `window.location.origin`, and the app registration's SPA redirect URIs include `http://localhost:5174` (also 5173 and 5175), so sign-in only works from those origins.
+- `vite.config.ts` pins port 5175 with `strictPort: true`, so a bare `npm run dev` always uses 5175 and Vite fails loudly instead of drifting to another port.
+- MSAL redirects back to `window.location.origin`, and the app registration's SPA redirect URIs include `http://localhost:5175` for this app, so sign-in only works from that origin.
 
 The other apps use their own fixed ports:
 
 | App | Port |
 |---|---|
 | rs-backend (Functions host) | 7071 |
-| rs-superadmin (this repo) | 5174 |
-| rs-admin | 5175 |
-| rs-storefront | 5176 |
+| rs-storefront | 5173 |
+| rs-admin | 5174 |
+| rs-superadmin (this repo) | 5175 |
 
 ### 4. Checks
 
