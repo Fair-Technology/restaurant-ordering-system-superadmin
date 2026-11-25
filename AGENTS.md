@@ -11,3 +11,6 @@ Platform-staff console (React + TypeScript + Vite) of the restaurant ordering sy
 - The API client (`src/services/api.ts`) is **generated** from `openapi/swagger.json` (a copy of the `rs-backend` spec) via `npm run openapi:generate` (config: `openapi/rtk-query.config.cjs`, must keep `tag: true`). Don't hand-edit it.
 - Pushing to `main` deploys to the dev Static Web App. Work on a branch and open a PR.
 - Product rules live in the shared spec in `rs-backend` (`docs/specs.md`), not in this repo.
+
+## Git hooks
+Run `git config core.hooksPath scripts/git-hooks` once per clone/worktree to enable the post-merge hook that deletes branches already merged into `main` (`scripts/cleanup-merged-branches.sh [--dry-run]`).
