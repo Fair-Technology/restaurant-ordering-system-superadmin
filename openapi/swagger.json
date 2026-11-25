@@ -366,7 +366,7 @@
     "/orders/by-payment-intent/{paymentIntentId}": {
       "get": {
         "summary": "Get order by Stripe payment intent ID",
-        "description": "Retrieves order details using the Stripe payment intent ID. The payment intent ID is available on the frontend from stripe.confirmPayment() result or by parsing the clientSecret (format: pi_xxx_secret_xxx). Returns 404 if the order has not yet been created (webhook not yet processed) — poll with back-off until a 200 is returned.",
+        "description": "Retrieves order details using the Stripe payment intent ID. The payment intent ID is available on the frontend from stripe.confirmPayment() result or by parsing the clientSecret (format: pi_xxx_secret_xxx). Returns 404 if the order has not yet been created (webhook not yet processed) — poll with back-off until a 200 is returned. Access: the restaurant's owner or staff with the `view_orders` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getOrderByPaymentIntent",
         "tags": [
           "Orders"
@@ -1125,6 +1125,73 @@
         }
       }
     },
+    "/platform/owners": {
+      "get": {
+        "summary": "List restaurant owners with shop counts (platform staff)",
+        "description": "Paged, ordered by email. Optional search matches email or name (case-insensitive substring). shopCount uses the same rule as the create-shop limit check; effectiveLimit is the per-user maxShops or the global default.",
+        "operationId": "listOwners",
+        "tags": [
+          "Platform"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "search",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Owners page",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListOwnersResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/platform/reference-lists/{countryCode}": {
       "put": {
         "operationId": "updateReferenceLists",
@@ -1381,6 +1448,7 @@
       },
       "get": {
         "summary": "Get products by shop",
+        "description": "Access: the restaurant's owner or staff with the `manage_menu` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getProductsByShop",
         "tags": [
           "Products"
@@ -1498,6 +1566,7 @@
       },
       "get": {
         "summary": "Get product by ID",
+        "description": "Access: the restaurant's owner or staff; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getProductById",
         "tags": [
           "Products"
@@ -1647,6 +1716,9 @@
                       "$ref": "#/components/schemas/FulfilmentMode"
                     }
                   },
+                  "ageRestricted": {
+                    "type": "boolean"
+                  },
                   "taxClassId": {
                     "type": "string",
                     "nullable": true
@@ -1655,6 +1727,12 @@
                     "type": "array",
                     "items": {
                       "$ref": "#/components/schemas/ProductVariantGroup"
+                    }
+                  },
+                  "optionGroupRefs": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
                     }
                   },
                   "addonGroups": {
@@ -1689,6 +1767,79 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UpdateProductResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/products/{productId}/availability": {
+      "patch": {
+        "summary": "Mark a dish sold out (or back on sale)",
+        "description": "Stock-only write: switches a dish on or off (isAvailable). Nothing else about the dish can be changed here. Allowed with the manage_stock or manage_menu permission.",
+        "operationId": "updateProductAvailability",
+        "tags": [
+          "Products"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "productId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "shopId": {
+                    "type": "string"
+                  },
+                  "isAvailable": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "shopId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dish availability updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateProductAvailabilityResultDto"
                 }
               }
             }
@@ -1903,6 +2054,7 @@
       },
       "get": {
         "summary": "Get shop by ID",
+        "description": "Access: the restaurant's owner or staff; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getShopById",
         "tags": [
           "Shops"
@@ -2174,6 +2326,31 @@
                       "sun"
                     ],
                     "additionalProperties": false
+                  },
+                  "closures": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string"
+                        },
+                        "start": {
+                          "type": "string"
+                        },
+                        "end": {
+                          "type": "string"
+                        },
+                        "reason": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "start",
+                        "end"
+                      ],
+                      "additionalProperties": false
+                    }
                   }
                 }
               }
@@ -2214,6 +2391,7 @@
     },
     "/shops/{shopId}/audit": {
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `view_audit` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getAuditEntries",
         "tags": [
           "Audit"
@@ -2482,6 +2660,7 @@
       },
       "get": {
         "summary": "Get categories by shop",
+        "description": "Access: the restaurant's owner or staff; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getCategoriesByShop",
         "tags": [
           "Categories"
@@ -2588,6 +2767,7 @@
       },
       "get": {
         "summary": "Get category by ID",
+        "description": "Access: the restaurant's owner or staff; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getCategoryById",
         "tags": [
           "Categories"
@@ -2797,6 +2977,87 @@
         }
       }
     },
+    "/shops/{shopId}/categories/{categoryId}/dish-order": {
+      "put": {
+        "summary": "Set the order of a category's dishes",
+        "description": "Access: manage_menu. Body: { productIds } — exactly the dishes currently in the category (combos excluded), in the intended order; unknown, foreign, deleted, duplicate or missing ids are rejected. Idempotent: only dishes whose position changes are written. Not transactional across dishes (last write wins per dish).",
+        "operationId": "setCategoryDishOrder",
+        "tags": [
+          "Categories"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "categoryId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "productIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": [
+                  "productIds"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Dish order saved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetCategoryDishOrderResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/shops/{shopId}/combos": {
       "post": {
         "summary": "Create combo",
@@ -2860,7 +3121,7 @@
       },
       "get": {
         "summary": "List combos",
-        "description": "The restaurant combos, sorted by name. Includes images and translations.",
+        "description": "The restaurant combos, sorted by name. Includes images and translations. Access: the restaurant's owner or staff with the `manage_menu` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getCombos",
         "tags": [
           "Combos"
@@ -3596,8 +3857,70 @@
         }
       }
     },
+    "/shops/{shopId}/invoices/archive": {
+      "get": {
+        "summary": "Download a month of invoices and correction invoices (owner)",
+        "description": "Owner only. The month query parameter (YYYY-MM) is the restaurant's local month; documents are grouped by the date they were issued, so a correction issued in November for an October order belongs to November. Returns one ZIP of PDFs (invoices, cancellation invoices and correction invoices), named invoices-YYYY-MM.zip, rendered from the stored snapshots. A month with no documents is 404.",
+        "operationId": "exportInvoiceArchive",
+        "tags": [
+          "Orders"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}-(0[1-9]|1[0-2])$"
+            },
+            "description": "The restaurant's local month, as YYYY-MM"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The ZIP as base64",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvoiceArchiveFileDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/shops/{shopId}/legal": {
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `manage_shop` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getShopLegal",
         "tags": [
           "Legal"
@@ -3703,6 +4026,55 @@
       }
     },
     "/shops/{shopId}/logo": {
+      "delete": {
+        "summary": "Remove shop logo",
+        "description": "Clears the shop logo (branding.logoUrl) and deletes the stored file. Succeeds without changes if no logo is set.",
+        "operationId": "removeShopLogo",
+        "tags": [
+          "Shop Logo"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Shop logo removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetShopLogoResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
       "post": {
         "summary": "Set shop logo",
         "description": "Registers the uploaded logo blob URL on the shop. Deletes the previous logo blob if one existed.",
@@ -4148,8 +4520,440 @@
         }
       }
     },
+    "/shops/{shopId}/option-groups": {
+      "post": {
+        "summary": "Create a shop-wide option group",
+        "operationId": "createOptionGroup",
+        "tags": [
+          "OptionGroups"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "variant",
+                      "addon"
+                    ]
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "nameTranslations": {
+                    "$ref": "#/components/schemas/TranslationMap"
+                  },
+                  "minSelectable": {
+                    "type": "number"
+                  },
+                  "maxSelectable": {
+                    "type": "number"
+                  },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ShopOptionGroupOptionInputDto"
+                    }
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name",
+                  "options"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Option group created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateOptionGroupResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "get": {
+        "summary": "List the shop's option-group library",
+        "operationId": "getOptionGroups",
+        "tags": [
+          "OptionGroups"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Option groups retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetOptionGroupsResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/shops/{shopId}/option-groups/{groupId}": {
+      "delete": {
+        "summary": "Delete an option group (soft delete)",
+        "operationId": "deleteOptionGroup",
+        "tags": [
+          "OptionGroups"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Option group deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteOptionGroupResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "get": {
+        "summary": "Get an option group by ID",
+        "operationId": "getOptionGroup",
+        "tags": [
+          "OptionGroups"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Option group retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetOptionGroupResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      },
+      "put": {
+        "summary": "Replace an option group (kind is immutable)",
+        "operationId": "updateOptionGroup",
+        "tags": [
+          "OptionGroups"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  },
+                  "nameTranslations": {
+                    "$ref": "#/components/schemas/TranslationMap"
+                  },
+                  "minSelectable": {
+                    "type": "number"
+                  },
+                  "maxSelectable": {
+                    "type": "number"
+                  },
+                  "options": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/components/schemas/ShopOptionGroupOptionInputDto"
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "options"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Option group updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateOptionGroupResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/shops/{shopId}/option-groups/{groupId}/options/{optionId}": {
+      "patch": {
+        "summary": "Switch one option on or off everywhere it is used",
+        "operationId": "setOptionAvailability",
+        "tags": [
+          "OptionGroups"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "shopId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "optionId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                  "isAvailable": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "isAvailable"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Option availability updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SetOptionAvailabilityResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/shops/{shopId}/order-limit": {
       "get": {
+        "description": "Access: the restaurant's owner or staff; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getOrderLimit",
         "tags": [
           "Usage"
@@ -4199,6 +5003,7 @@
     },
     "/shops/{shopId}/order-queue": {
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `view_orders` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getOrderQueue",
         "tags": [
           "Orders"
@@ -4382,6 +5187,7 @@
     "/shops/{shopId}/orders": {
       "get": {
         "summary": "List orders for a shop",
+        "description": "Access: the restaurant's owner or staff with the `view_orders` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getOrdersByShop",
         "tags": [
           "Orders"
@@ -4413,6 +5219,24 @@
               "type": "integer"
             },
             "description": "Number of orders per page (default: 20, max: 100)"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Inclusive lower bound on the order's createdAt, an ISO-8601 UTC instant (e.g. 2026-11-16T00:00:00.000Z). `total` is scoped by the same filter."
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Exclusive upper bound on the order's createdAt, an ISO-8601 UTC instant (e.g. 2026-11-17T00:00:00.000Z). `total` is scoped by the same filter."
           }
         ],
         "responses": {
@@ -4630,8 +5454,8 @@
     },
     "/shops/{shopId}/orders/{orderId}/documents/{documentId}": {
       "get": {
-        "summary": "Download an invoice or correction invoice (staff)",
-        "description": "documentId is the order id for the invoice, or the order id followed by -c1, -c2 and so on for correction invoices. A document of another order or restaurant is 404.",
+        "summary": "Download an invoice or correction invoice (staff or platform operator)",
+        "description": "documentId is the order id for the invoice, or the order id followed by -c1, -c2 and so on for correction invoices. A document of another order or restaurant is 404. Access: the restaurant's owner or staff with the `view_orders` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getOrderDocument",
         "tags": [
           "Orders"
@@ -5062,6 +5886,7 @@
     },
     "/shops/{shopId}/promotions": {
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `manage_shop` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getPromotions",
         "tags": [
           "Promotions"
@@ -5324,6 +6149,7 @@
     },
     "/shops/{shopId}/reports/sales": {
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `view_reports` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "getSalesReport",
         "tags": [
           "Reports"
@@ -5349,6 +6175,15 @@
             "in": "query",
             "required": true,
             "schema": {}
+          },
+          {
+            "name": "lang",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Menu language for the top-dish names (e.g. de, en). Names come from the current catalog in this language; a deleted dish or combo keeps the name from its orders. Defaults to the shop's first menu language."
           }
         ],
         "responses": {
@@ -5523,6 +6358,7 @@
         }
       },
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `manage_staff` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes.",
         "operationId": "listStaff",
         "tags": [
           "Staff"
@@ -5948,6 +6784,7 @@
         }
       },
       "get": {
+        "description": "Access: the restaurant's owner or staff with the `manage_billing` permission; platform operators (Platform.Owner, Platform.Support, Platform.ReadOnly) may also read. A read never writes. Never creates the subscription document: a shop without one gets the default plan derived in memory.",
         "operationId": "getShopSubscription",
         "tags": [
           "Subscriptions"
@@ -6748,6 +7585,69 @@
         }
       }
     },
+    "/shops/slug-available/{slug}": {
+      "get": {
+        "summary": "Check whether a shop web address (slug) is available",
+        "operationId": "checkSlugAvailability",
+        "tags": [
+          "Shops"
+        ],
+        "security": [],
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Availability checked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "properties": {
+                    "slug": {
+                      "type": "string"
+                    },
+                    "available": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "slug",
+                    "available"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/shops/slug/{slug}": {
       "get": {
         "summary": "Get shop by slug",
@@ -6902,6 +7802,94 @@
         }
       }
     },
+    "/staff/me": {
+      "get": {
+        "operationId": "getStaffMe",
+        "tags": [
+          "Staff"
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetStaffMeResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/staff/me/language": {
+      "patch": {
+        "operationId": "updateMyStaffLanguage",
+        "tags": [
+          "Staff"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMyStaffLanguageRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMyStaffLanguageResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
     "/usage/rejection-watch": {
       "get": {
         "operationId": "getRejectionWatch",
@@ -6955,6 +7943,55 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/GetMeResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/BadRequest"
+          },
+          "401": {
+            "$ref": "#/components/responses/Unauthorized"
+          },
+          "403": {
+            "$ref": "#/components/responses/Forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/NotFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/Conflict"
+          },
+          "500": {
+            "$ref": "#/components/responses/InternalError"
+          }
+        }
+      }
+    },
+    "/users/me/language": {
+      "patch": {
+        "operationId": "updateMyLanguage",
+        "tags": [
+          "Users"
+        ],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateMyLanguageRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateMyLanguageResultDto"
                 }
               }
             }
@@ -7476,6 +8513,9 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "availableNow": {
             "type": "boolean"
           },
@@ -7508,6 +8548,7 @@
           "dietaryTags",
           "spice",
           "unavailableModes",
+          "ageRestricted",
           "availableNow",
           "combo",
           "createdAt",
@@ -7564,6 +8605,10 @@
             "items": {
               "$ref": "#/components/schemas/CatalogAdditiveDto"
             }
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
           }
         },
         "required": [
@@ -7572,7 +8617,8 @@
           "priceDelta",
           "isAvailable",
           "allergens",
-          "additives"
+          "additives",
+          "category"
         ],
         "additionalProperties": false
       },
@@ -7955,6 +9001,34 @@
         ],
         "additionalProperties": false
       },
+      "InvoiceLegalExtras": {
+        "type": "object",
+        "properties": {
+          "managingDirector": {
+            "type": "string"
+          },
+          "court": {
+            "type": "string"
+          },
+          "registerNumber": {
+            "type": "string"
+          },
+          "iban": {
+            "type": "string"
+          },
+          "bic": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "managingDirector",
+          "court",
+          "registerNumber",
+          "iban",
+          "bic"
+        ],
+        "additionalProperties": false
+      },
       "Category": {
         "type": "object",
         "properties": {
@@ -8043,6 +9117,12 @@
               "type": "string"
             }
           },
+          "categoryOrder": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
           "images": {
             "type": "array",
             "items": {
@@ -8053,6 +9133,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProductVariantGroup"
+            }
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
           "addonGroups": {
@@ -8098,6 +9184,9 @@
             "items": {
               "$ref": "#/components/schemas/FulfilmentMode"
             }
+          },
+          "ageRestricted": {
+            "type": "boolean"
           },
           "taxClassId": {
             "type": "string",
@@ -8208,6 +9297,9 @@
             "items": {
               "type": "string"
             }
+          },
+          "category": {
+            "type": "string"
           }
         },
         "required": [
@@ -8291,6 +9383,9 @@
           "offerLabel": {
             "type": "string",
             "nullable": true
+          },
+          "offerLabelTranslations": {
+            "$ref": "#/components/schemas/TranslationMap"
           }
         },
         "required": [
@@ -8344,9 +9439,9 @@
         "additionalProperties": false
       },
       "ExportOrder": {
-        "$ref": "#/components/schemas/Pick_Order_Exclude_id_shopId_orderRef_st_08d1799a"
+        "$ref": "#/components/schemas/Pick_Order_Exclude_id_shopId_orderRef_st_dd9f5955"
       },
-      "Pick_Order_Exclude_id_shopId_orderRef_st_08d1799a": {
+      "Pick_Order_Exclude_id_shopId_orderRef_st_dd9f5955": {
         "type": "object",
         "properties": {
           "id": {
@@ -8485,6 +9580,9 @@
           },
           "legalRevisions": {
             "$ref": "#/components/schemas/LegalRevisions"
+          },
+          "ageConfirmedAt": {
+            "type": "string"
           },
           "autoRejectAt": {
             "type": "string"
@@ -8626,6 +9724,9 @@
           },
           "combo": {
             "$ref": "#/components/schemas/OrderItemCombo"
+          },
+          "ageRestricted": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -9052,6 +10153,298 @@
         ],
         "additionalProperties": false
       },
+      "InvoiceDoc": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shopId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "const": "invoice"
+          },
+          "documentType": {
+            "$ref": "#/components/schemas/InvoiceDocumentType"
+          },
+          "number": {
+            "type": "string"
+          },
+          "templateVersion": {
+            "type": "string",
+            "enum": [
+              "receipt-2026-10",
+              "invoice-2026-11"
+            ]
+          },
+          "issuedAt": {
+            "type": "string"
+          },
+          "supplyDate": {
+            "type": "string"
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "seller": {
+            "$ref": "#/components/schemas/InvoiceSeller"
+          },
+          "buyer": {
+            "$ref": "#/components/schemas/InvoiceBuyer"
+          },
+          "lines": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceLine"
+            }
+          },
+          "taxBreakdown": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TaxBreakdownEntry"
+            }
+          },
+          "totalCents": {
+            "type": "number"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "payment": {
+            "type": "object",
+            "properties": {
+              "method": {
+                "type": "string",
+                "const": "card"
+              },
+              "stripePaymentIntentId": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "method",
+              "stripePaymentIntentId"
+            ],
+            "additionalProperties": false
+          },
+          "orderRef": {
+            "type": "string"
+          },
+          "fulfilmentMode": {
+            "$ref": "#/components/schemas/FulfilmentMode"
+          },
+          "language": {
+            "$ref": "#/components/schemas/MenuLanguage"
+          },
+          "corrects": {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "string"
+              },
+              "issuedAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "number",
+              "issuedAt"
+            ],
+            "additionalProperties": false,
+            "nullable": true
+          },
+          "reverses": {
+            "type": "object",
+            "properties": {
+              "number": {
+                "type": "string"
+              },
+              "issuedAt": {
+                "type": "string"
+              },
+              "documentType": {
+                "$ref": "#/components/schemas/InvoiceDocumentType"
+              }
+            },
+            "required": [
+              "number",
+              "issuedAt",
+              "documentType"
+            ],
+            "additionalProperties": false
+          },
+          "refundId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "shopId",
+          "kind",
+          "documentType",
+          "number",
+          "templateVersion",
+          "issuedAt",
+          "supplyDate",
+          "timezone",
+          "seller",
+          "buyer",
+          "lines",
+          "taxBreakdown",
+          "totalCents",
+          "currency",
+          "payment",
+          "orderRef",
+          "fulfilmentMode",
+          "language",
+          "corrects",
+          "refundId"
+        ],
+        "additionalProperties": false
+      },
+      "InvoiceDocumentType": {
+        "type": "string",
+        "enum": [
+          "invoice",
+          "cancellation",
+          "correction"
+        ]
+      },
+      "InvoiceSeller": {
+        "type": "object",
+        "properties": {
+          "legalName": {
+            "type": "string"
+          },
+          "street": {
+            "type": "string"
+          },
+          "postcode": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "vatId": {
+            "type": "string"
+          },
+          "taxNumber": {
+            "type": "string"
+          },
+          "registerCourt": {
+            "type": "string"
+          },
+          "registerNumber": {
+            "type": "string"
+          },
+          "managingDirector": {
+            "type": "string"
+          },
+          "invoiceCourt": {
+            "type": "string"
+          },
+          "invoiceRegisterNumber": {
+            "type": "string"
+          },
+          "iban": {
+            "type": "string"
+          },
+          "bic": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "legalName",
+          "street",
+          "postcode",
+          "city",
+          "country",
+          "phone",
+          "email",
+          "vatId",
+          "taxNumber",
+          "registerCourt",
+          "registerNumber"
+        ],
+        "additionalProperties": false
+      },
+      "InvoiceBuyer": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/CustomerAddress"
+              }
+            ]
+          }
+        },
+        "required": [
+          "name",
+          "address"
+        ],
+        "additionalProperties": false
+      },
+      "InvoiceLine": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "unitPriceCents": {
+            "type": "number"
+          },
+          "lineTotalCents": {
+            "type": "number"
+          },
+          "taxRateBasisPoints": {
+            "type": "number"
+          },
+          "taxCents": {
+            "type": "number"
+          },
+          "modifiers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "productName": {
+            "type": "string"
+          },
+          "comboLine": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "name",
+          "quantity",
+          "unitPriceCents",
+          "lineTotalCents",
+          "taxRateBasisPoints",
+          "taxCents"
+        ],
+        "additionalProperties": false
+      },
       "SubProcessor": {
         "type": "object",
         "properties": {
@@ -9168,6 +10561,144 @@
         ],
         "additionalProperties": false
       },
+      "ShopOptionGroupDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shopId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "variant",
+              "addon"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameTranslations": {
+            "$ref": "#/components/schemas/TranslationMap"
+          },
+          "minSelectable": {
+            "type": "number"
+          },
+          "maxSelectable": {
+            "type": "number"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOptionGroupOption"
+            }
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "shopId",
+          "kind",
+          "name",
+          "nameTranslations",
+          "minSelectable",
+          "maxSelectable",
+          "options",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "ShopOptionGroupOption": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameTranslations": {
+            "$ref": "#/components/schemas/TranslationMap"
+          },
+          "priceDelta": {
+            "type": "number"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "allergenIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "additiveIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "category": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "priceDelta",
+          "isAvailable"
+        ],
+        "additionalProperties": false
+      },
+      "ShopOptionGroupOptionInputDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameTranslations": {
+            "$ref": "#/components/schemas/TranslationMap"
+          },
+          "priceDelta": {
+            "type": "number"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "allergenIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "additiveIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "category": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "name",
+          "priceDelta"
+        ],
+        "additionalProperties": false
+      },
       "OrderState": {
         "type": "string",
         "enum": [
@@ -9256,6 +10787,9 @@
             ],
             "additionalProperties": false,
             "nullable": true
+          },
+          "ageRestricted": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -9265,7 +10799,8 @@
           "unitPriceCents",
           "lineTotalCents",
           "discountCents",
-          "combo"
+          "combo",
+          "ageRestricted"
         ],
         "additionalProperties": false
       },
@@ -9288,14 +10823,6 @@
           "number"
         ],
         "additionalProperties": false
-      },
-      "InvoiceDocumentType": {
-        "type": "string",
-        "enum": [
-          "invoice",
-          "cancellation",
-          "correction"
-        ]
       },
       "OrderDto": {
         "type": "object",
@@ -10336,12 +11863,21 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "taxClassId": {
             "type": "string",
             "nullable": true
           },
           "isDeclared": {
             "type": "boolean"
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "id": {
             "type": "string"
@@ -10382,6 +11918,12 @@
                 "sortOrder"
               ],
               "additionalProperties": false
+            }
+          },
+          "categoryOrder": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
             }
           },
           "images": {
@@ -10425,6 +11967,7 @@
         },
         "required": [
           "additiveIds",
+          "ageRestricted",
           "allergenIds",
           "categories",
           "createdAt",
@@ -10438,6 +11981,7 @@
           "isDeleted",
           "name",
           "nameTranslations",
+          "optionGroupRefs",
           "prepMinutes",
           "price",
           "shopId",
@@ -11951,6 +13495,14 @@
           "role": {
             "$ref": "#/components/schemas/StaffRole"
           },
+          "language": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MenuLanguage"
+              }
+            ]
+          },
           "isActive": {
             "type": "boolean"
           },
@@ -11970,6 +13522,7 @@
           "username",
           "displayName",
           "role",
+          "language",
           "isActive",
           "isLocked",
           "lastLoginAt",
@@ -12305,12 +13858,75 @@
         ],
         "additionalProperties": false
       },
-      "SystemRole": {
-        "type": "string",
-        "enum": [
-          "user",
-          "superadmin"
-        ]
+      "OwnerSummaryDto": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "maxShops": {
+            "type": "number",
+            "nullable": true
+          },
+          "effectiveLimit": {
+            "type": "number"
+          },
+          "shopCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "userId",
+          "maxShops",
+          "effectiveLimit",
+          "shopCount"
+        ],
+        "additionalProperties": false
+      },
+      "GetMeResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "platformAccess": {
+            "type": "string",
+            "enum": [
+              "read",
+              "write"
+            ]
+          },
+          "language": {
+            "$ref": "#/components/schemas/MenuLanguage"
+          },
+          "restaurantLanguage": {
+            "$ref": "#/components/schemas/MenuLanguage"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": false
       },
       "GetAuditEntriesResultDto": {
         "type": "object",
@@ -12889,12 +14505,18 @@
             "type": "string"
           },
           "contentUrl": {
-            "type": "string"
+            "type": "string",
+            "format": "uri",
+            "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://",
+            "description": "Absolute http(s) URL supplied by the reporter, when one was given. Constrained on the write path (see SubmitContentReportBody.contentUrl); rows written before that constraint existed are not migrated."
           },
           "reporterName": {
             "type": "string"
           },
           "reporterEmail": {
+            "type": "string"
+          },
+          "ipHash": {
             "type": "string"
           },
           "status": {
@@ -12992,7 +14614,10 @@
             "type": "string"
           },
           "contentUrl": {
-            "type": "string"
+            "type": "string",
+            "format": "uri",
+            "pattern": "^[Hh][Tt][Tt][Pp][Ss]?://",
+            "description": "Absolute http(s) URL of the reported content. The submit route is public (no sign-in) and the platform console renders this value as a link an operator clicks, so the server accepts nothing else: any other scheme (javascript:, data:, blob:, file:) or a non-absolute URL (relative or protocol-relative) is refused with 400. Omit or send blank to report without a URL."
           },
           "reporterName": {
             "type": "string"
@@ -13109,6 +14734,14 @@
           },
           "taxNumber": {
             "type": "string"
+          },
+          "invoiceLegalExtras": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/InvoiceLegalExtras"
+              }
+            ]
           }
         },
         "required": [
@@ -13121,7 +14754,8 @@
           "dpa",
           "platformIdentityComplete",
           "callerIsOwner",
-          "taxNumber"
+          "taxNumber",
+          "invoiceLegalExtras"
         ],
         "additionalProperties": false
       },
@@ -13404,6 +15038,12 @@
             "items": {
               "$ref": "#/components/schemas/ExportCustomer"
             }
+          },
+          "invoices": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/InvoiceDoc"
+            }
           }
         },
         "required": [
@@ -13413,7 +15053,8 @@
           "categories",
           "products",
           "orders",
-          "customers"
+          "customers",
+          "invoices"
         ],
         "additionalProperties": false
       },
@@ -13677,7 +15318,8 @@
           },
           "taxNumber": {
             "type": "string"
-          }
+          },
+          "invoiceLegalExtras": {}
         },
         "additionalProperties": false
       },
@@ -13741,6 +15383,196 @@
         ],
         "additionalProperties": false
       },
+      "CreateOptionGroupResultDto": {
+        "$ref": "#/components/schemas/ShopOptionGroupDto"
+      },
+      "CreateOptionGroupRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "variant",
+              "addon"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameTranslations": {
+            "$ref": "#/components/schemas/TranslationMap"
+          },
+          "minSelectable": {
+            "type": "number"
+          },
+          "maxSelectable": {
+            "type": "number"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOptionGroupOptionInputDto"
+            }
+          }
+        },
+        "required": [
+          "shopId",
+          "kind",
+          "name",
+          "options"
+        ],
+        "additionalProperties": false
+      },
+      "DeleteOptionGroupResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shopId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "isDeleted": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "shopId",
+          "name",
+          "isDeleted",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "DeleteOptionGroupRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "shopId",
+          "groupId"
+        ],
+        "additionalProperties": false
+      },
+      "GetOptionGroupResultDto": {
+        "$ref": "#/components/schemas/ShopOptionGroupDto"
+      },
+      "GetOptionGroupRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "shopId",
+          "groupId"
+        ],
+        "additionalProperties": false
+      },
+      "GetOptionGroupsResultDto": {
+        "type": "array",
+        "items": {
+          "$ref": "#/components/schemas/ShopOptionGroupDto"
+        }
+      },
+      "GetOptionGroupsRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "shopId"
+        ],
+        "additionalProperties": false
+      },
+      "SetOptionAvailabilityResultDto": {
+        "$ref": "#/components/schemas/ShopOptionGroupDto"
+      },
+      "SetOptionAvailabilityRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "optionId": {
+            "type": "string"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "shopId",
+          "groupId",
+          "optionId",
+          "isAvailable"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateOptionGroupResultDto": {
+        "$ref": "#/components/schemas/ShopOptionGroupDto"
+      },
+      "UpdateOptionGroupRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "nameTranslations": {
+            "$ref": "#/components/schemas/TranslationMap"
+          },
+          "minSelectable": {
+            "type": "number"
+          },
+          "maxSelectable": {
+            "type": "number"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ShopOptionGroupOptionInputDto"
+            }
+          }
+        },
+        "required": [
+          "shopId",
+          "groupId",
+          "name",
+          "options"
+        ],
+        "additionalProperties": false
+      },
       "GetOrdersByShopResultDto": {
         "type": "object",
         "properties": {
@@ -13753,6 +15585,12 @@
           "total": {
             "type": "number"
           },
+          "stateCounts": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            }
+          },
           "page": {
             "type": "number"
           },
@@ -13763,6 +15601,7 @@
         "required": [
           "orders",
           "total",
+          "stateCounts",
           "page",
           "pageSize"
         ],
@@ -13779,6 +15618,12 @@
           },
           "pageSize": {
             "type": "number"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
           }
         },
         "required": [
@@ -13974,6 +15819,30 @@
                   "items": {
                     "type": "string"
                   }
+                },
+                "combo": {
+                  "type": "object",
+                  "properties": {
+                    "line": {
+                      "type": "number"
+                    },
+                    "productId": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "line",
+                    "productId",
+                    "name"
+                  ],
+                  "additionalProperties": false,
+                  "nullable": true
+                },
+                "ageRestricted": {
+                  "type": "boolean"
                 }
               },
               "required": [
@@ -13982,7 +15851,8 @@
                 "unitPriceCents",
                 "lineTotalCents",
                 "selectedVariantOptionName",
-                "selectedAddonOptionNames"
+                "selectedAddonOptionNames",
+                "ageRestricted"
               ],
               "additionalProperties": false
             }
@@ -14157,6 +16027,9 @@
           },
           "legalRevisions": {
             "$ref": "#/components/schemas/LegalRevisions"
+          },
+          "ageConfirmedAt": {
+            "type": "string"
           }
         },
         "required": [
@@ -14165,6 +16038,27 @@
           "customerName",
           "customerEmail",
           "customerPhone"
+        ],
+        "additionalProperties": false
+      },
+      "InvoiceArchiveFileDto": {
+        "type": "object",
+        "properties": {
+          "fileName": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string",
+            "const": "application/zip"
+          },
+          "contentBase64": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "fileName",
+          "contentType",
+          "contentBase64"
         ],
         "additionalProperties": false
       },
@@ -14204,6 +16098,9 @@
                 "productName": {
                   "type": "string"
                 },
+                "ageRestricted": {
+                  "type": "boolean"
+                },
                 "quantity": {
                   "type": "number"
                 },
@@ -14235,6 +16132,7 @@
               "required": [
                 "productId",
                 "productName",
+                "ageRestricted",
                 "quantity",
                 "unitPriceCents",
                 "lineTotalCents"
@@ -14886,12 +16784,21 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "taxClassId": {
             "type": "string",
             "nullable": true
           },
           "isDeclared": {
             "type": "boolean"
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "id": {
             "type": "string"
@@ -14931,6 +16838,7 @@
         },
         "required": [
           "additiveIds",
+          "ageRestricted",
           "allergenIds",
           "createdAt",
           "description",
@@ -14942,6 +16850,7 @@
           "isDeleted",
           "name",
           "nameTranslations",
+          "optionGroupRefs",
           "prepMinutes",
           "price",
           "shopId",
@@ -15023,6 +16932,9 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "taxClassId": {
             "type": "string",
             "nullable": true
@@ -15031,6 +16943,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProductVariantGroup"
+            }
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
           "addonGroups": {
@@ -15054,7 +16972,6 @@
         "required": [
           "shopId",
           "name",
-          "description",
           "price"
         ],
         "additionalProperties": false
@@ -15184,12 +17101,21 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "taxClassId": {
             "type": "string",
             "nullable": true
           },
           "isDeclared": {
             "type": "boolean"
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "id": {
             "type": "string"
@@ -15273,6 +17199,7 @@
         },
         "required": [
           "additiveIds",
+          "ageRestricted",
           "allergenIds",
           "categories",
           "createdAt",
@@ -15286,6 +17213,7 @@
           "isDeleted",
           "name",
           "nameTranslations",
+          "optionGroupRefs",
           "prepMinutes",
           "price",
           "shopId",
@@ -15327,6 +17255,61 @@
         },
         "required": [
           "shopId"
+        ],
+        "additionalProperties": false
+      },
+      "SetCategoryDishOrderResultDto": {
+        "type": "object",
+        "properties": {
+          "categoryId": {
+            "type": "string"
+          },
+          "products": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "categoryId",
+          "products"
+        ],
+        "additionalProperties": false
+      },
+      "SetCategoryDishOrderRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "productIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "shopId",
+          "categoryId",
+          "productIds"
         ],
         "additionalProperties": false
       },
@@ -15377,12 +17360,21 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "taxClassId": {
             "type": "string",
             "nullable": true
           },
           "isDeclared": {
             "type": "boolean"
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           },
           "id": {
             "type": "string"
@@ -15422,6 +17414,7 @@
         },
         "required": [
           "additiveIds",
+          "ageRestricted",
           "allergenIds",
           "createdAt",
           "description",
@@ -15433,6 +17426,7 @@
           "isDeleted",
           "name",
           "nameTranslations",
+          "optionGroupRefs",
           "prepMinutes",
           "price",
           "shopId",
@@ -15517,6 +17511,9 @@
               "$ref": "#/components/schemas/FulfilmentMode"
             }
           },
+          "ageRestricted": {
+            "type": "boolean"
+          },
           "taxClassId": {
             "type": "string",
             "nullable": true
@@ -15525,6 +17522,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/ProductVariantGroup"
+            }
+          },
+          "optionGroupRefs": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           },
           "addonGroups": {
@@ -15543,6 +17546,49 @@
                 "$ref": "#/components/schemas/ProductSchedule"
               }
             ]
+          }
+        },
+        "required": [
+          "productId",
+          "shopId"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateProductAvailabilityResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shopId": {
+            "type": "string"
+          },
+          "isAvailable": {
+            "type": "boolean"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "shopId",
+          "isAvailable",
+          "updatedAt"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateProductAvailabilityRequestDto": {
+        "type": "object",
+        "properties": {
+          "productId": {
+            "type": "string"
+          },
+          "shopId": {
+            "type": "string"
+          },
+          "isAvailable": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -15848,6 +17894,9 @@
         "type": "object",
         "properties": {
           "name": {
+            "type": "string"
+          },
+          "slug": {
             "type": "string"
           },
           "countryCode": {
@@ -17154,59 +19203,6 @@
         ],
         "additionalProperties": false
       },
-      "RequestShopNameChangeResultDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "pendingNameChange": {
-            "type": "object",
-            "properties": {
-              "requestedName": {
-                "type": "string"
-              },
-              "requestedSlug": {
-                "type": "string"
-              },
-              "requestedBy": {
-                "type": "string"
-              },
-              "requestedAt": {
-                "type": "string"
-              }
-            },
-            "required": [
-              "requestedName",
-              "requestedSlug",
-              "requestedBy",
-              "requestedAt"
-            ],
-            "additionalProperties": false
-          }
-        },
-        "required": [
-          "id",
-          "pendingNameChange"
-        ],
-        "additionalProperties": false
-      },
-      "RequestShopNameChangeRequestDto": {
-        "type": "object",
-        "properties": {
-          "shopId": {
-            "type": "string"
-          },
-          "requestedName": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "shopId",
-          "requestedName"
-        ],
-        "additionalProperties": false
-      },
       "SetShopLogoResultDto": {
         "type": "object",
         "properties": {
@@ -17265,6 +19261,71 @@
           "shopId",
           "imageId",
           "url"
+        ],
+        "additionalProperties": false
+      },
+      "RemoveShopLogoRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "shopId"
+        ],
+        "additionalProperties": false
+      },
+      "RequestShopNameChangeResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "pendingNameChange": {
+            "type": "object",
+            "properties": {
+              "requestedName": {
+                "type": "string"
+              },
+              "requestedSlug": {
+                "type": "string"
+              },
+              "requestedBy": {
+                "type": "string"
+              },
+              "requestedAt": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "requestedName",
+              "requestedSlug",
+              "requestedBy",
+              "requestedAt"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "id",
+          "pendingNameChange"
+        ],
+        "additionalProperties": false
+      },
+      "RequestShopNameChangeRequestDto": {
+        "type": "object",
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "requestedName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "shopId",
+          "requestedName"
         ],
         "additionalProperties": false
       },
@@ -17512,6 +19573,31 @@
               "sun"
             ],
             "additionalProperties": false
+          },
+          "closures": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "start": {
+                  "type": "string"
+                },
+                "end": {
+                  "type": "string"
+                },
+                "reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "start",
+                "end"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "required": [
@@ -17582,6 +19668,65 @@
           "staffId"
         ],
         "additionalProperties": false
+      },
+      "GetStaffMeResultDto": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "shopId": {
+            "type": "string"
+          },
+          "shopLanguage": {
+            "$ref": "#/components/schemas/MenuLanguage"
+          },
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/StaffRole"
+          },
+          "language": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MenuLanguage"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isLocked": {
+            "type": "boolean"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "createdAt",
+          "displayName",
+          "id",
+          "isActive",
+          "isLocked",
+          "language",
+          "lastLoginAt",
+          "role",
+          "shopId",
+          "shopLanguage",
+          "username"
+        ]
       },
       "ListStaffResultDto": {
         "type": "object",
@@ -17665,6 +19810,17 @@
           },
           "role": {
             "$ref": "#/components/schemas/StaffRole"
+          },
+          "language": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MenuLanguage"
+              }
+            ]
+          },
+          "shopLanguage": {
+            "$ref": "#/components/schemas/MenuLanguage"
           }
         },
         "required": [
@@ -17674,7 +19830,9 @@
           "shopSlug",
           "staffId",
           "username",
-          "role"
+          "role",
+          "language",
+          "shopLanguage"
         ],
         "additionalProperties": false
       },
@@ -17695,6 +19853,73 @@
           "shopSlug",
           "username",
           "password"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateMyStaffLanguageResultDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "username": {
+            "type": "string"
+          },
+          "displayName": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "$ref": "#/components/schemas/StaffRole"
+          },
+          "language": {
+            "nullable": true,
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/MenuLanguage"
+              }
+            ]
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "isLocked": {
+            "type": "boolean"
+          },
+          "lastLoginAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "shopId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "displayName",
+          "role",
+          "language",
+          "isActive",
+          "isLocked",
+          "lastLoginAt",
+          "createdAt",
+          "shopId"
+        ],
+        "additionalProperties": false
+      },
+      "UpdateMyStaffLanguageRequestDto": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "$ref": "#/components/schemas/MenuLanguage"
+          }
+        },
+        "required": [
+          "language"
         ],
         "additionalProperties": false
       },
@@ -18156,40 +20381,60 @@
         ],
         "additionalProperties": false
       },
-      "GetMeResultDto": {
+      "ListOwnersResultDto": {
         "type": "object",
         "properties": {
-          "id": {
-            "type": "string"
+          "owners": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/OwnerSummaryDto"
+            }
           },
-          "email": {
-            "type": "string"
+          "total": {
+            "type": "number"
           },
-          "name": {
-            "type": "string"
+          "page": {
+            "type": "number"
           },
-          "systemRole": {
-            "$ref": "#/components/schemas/SystemRole"
-          },
-          "platformAccess": {
-            "type": "string",
-            "enum": [
-              "read",
-              "write"
-            ]
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
+          "pageSize": {
+            "type": "number"
           }
         },
         "required": [
-          "id",
-          "systemRole",
-          "createdAt",
-          "updatedAt"
+          "owners",
+          "total",
+          "page",
+          "pageSize"
+        ],
+        "additionalProperties": false
+      },
+      "ListOwnersRequestDto": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "UpdateMyLanguageResultDto": {
+        "$ref": "#/components/schemas/GetMeResultDto"
+      },
+      "UpdateMyLanguageRequestDto": {
+        "type": "object",
+        "properties": {
+          "language": {
+            "$ref": "#/components/schemas/MenuLanguage"
+          }
+        },
+        "required": [
+          "language"
         ],
         "additionalProperties": false
       },
