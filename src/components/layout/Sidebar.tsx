@@ -5,6 +5,7 @@ import {
   ShieldCheck,
   LayoutDashboard,
   Store,
+  Users,
   ShoppingBag,
   CreditCard,
   FileEdit,
@@ -97,6 +98,10 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         <NavLink to="/shops" className={navLinkClass} onClick={onClose}>
           <Store className="w-4 h-4 flex-shrink-0" />
           Shops
+        </NavLink>
+        <NavLink to="/owners" className={navLinkClass} onClick={onClose}>
+          <Users className="w-4 h-4 flex-shrink-0" />
+          Owners
         </NavLink>
         {shopId ? (
           <NavLink to={`/shops/${shopId}/orders`} className={navLinkClass} onClick={onClose}>

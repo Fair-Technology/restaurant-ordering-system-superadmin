@@ -68,7 +68,7 @@ describe('page titles (render)', () => {
 
 describe('every routed page sets a title', () => {
   const pages: Record<string, string> = {
-    Dashboard: 'Dashboard', Shops: 'Shops', ShopOrders: 'Orders', ShopActivity: 'Activity',
+    Dashboard: 'Dashboard', Shops: 'Shops', Owners: 'Owners', ShopOrders: 'Orders', ShopActivity: 'Activity',
     ShopSubscription: 'Subscription', ShopUsage: 'Usage', RejectionWatch: 'Decline Watch',
     Plans: 'Plans', EditPlan: 'Edit Plan', PlanPricing: 'Plan Pricing', RolePermissions: 'Roles',
     ReferenceLists: 'Food & Tax Lists', PlatformLegal: 'Legal', NameChangeRequests: 'Name Changes',
