@@ -15,6 +15,8 @@ vi.mock('../services/api', () => ({
   useRestoreShopMutation: () => [vi.fn(), { isLoading: false }],
   useSetMissedOrdersPauseLimitMutation: () => [vi.fn(), { isLoading: false }],
   useSetShopOfflineBySuperadminMutation: () => [vi.fn(), { isLoading: false }],
+  useUpdateShopMutation: () => [vi.fn(), { isLoading: false }],
+  useGetShopByIdQuery: () => ({ data: undefined, isError: false }),
 }));
 
 import { ShopsPage } from './ShopsPage';
