@@ -2,10 +2,13 @@ import { usePageTitle } from '../features/layout/usePageTitle';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
+  useGetShopByIdQuery,
   useGetShopsQuery,
   useRestoreShopMutation,
   useSetMissedOrdersPauseLimitMutation,
   useSetShopOfflineBySuperadminMutation,
+  useUpdateShopMutation,
+  type GetShopResultDto,
   type ShopSummaryDto,
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
@@ -21,12 +24,235 @@ import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { PAGE_SIZE, buildSuperadminOfflineRequest, countShops, filterShops, pageOf } from './shops-list';
 import { useCanWrite } from '../auth/platformAccess';
+import { stateFieldFor } from '../features/shops/addressState';
 
 const STATUS_STYLE: Record<ShopStatusKind, string> = {
   online: 'bg-green-100 text-green-700',
   'offline-owner': 'bg-amber-100 text-amber-700',
   'offline-platform': 'bg-red-100 text-red-600',
 };
+
+function AddressDialog({
+  shop,
+  canWrite,
+  onClose,
+}: {
+  shop: ShopSummaryDto;
+  canWrite: boolean;
+  onClose: () => void;
+}) {
+  // The list row has no countryCode; fetch this one shop fresh when the dialog opens.
+  const { data, isError } = useGetShopByIdQuery(
+    { shopId: shop.id },
+    { refetchOnMountOrArgChange: true },
+  );
+  if (data) return <AddressForm shop={shop} detail={data} canWrite={canWrite} onClose={onClose} />;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="address-title"
+        className="glass-card bg-white p-6 w-full max-w-md"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="address-title" className="text-lg font-semibold text-indigo-900 mb-4">
+          Address for {shop.name}
+        </h2>
+        {isError ? (
+          <p className="text-sm text-red-500 mb-4">Could not load the address. Please try again.</p>
+        ) : (
+          <p className="text-sm text-gray-500 mb-4">Loading address...</p>
+        )}
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AddressForm({
+  shop,
+  detail,
+  canWrite,
+  onClose,
+}: {
+  shop: ShopSummaryDto;
+  detail: GetShopResultDto;
+  canWrite: boolean;
+  onClose: () => void;
+}) {
+  const [street, setStreet] = useState(detail.address?.street ?? '');
+  const [postcode, setPostcode] = useState(detail.address?.postcode ?? '');
+  const [city, setCity] = useState(detail.address?.city ?? '');
+  const [state, setState] = useState(detail.address?.state ?? '');
+  const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [updateShop, { isLoading: isSaving }] = useUpdateShopMutation();
+
+  const stateField = stateFieldFor(detail.countryCode, state);
+  const readOnly = !canWrite;
+  const inputClass =
+    'mt-1 w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300 disabled:bg-gray-50 disabled:text-gray-500';
+
+  const close = () => {
+    if (isSaving) return;
+    onClose();
+  };
+
+  const validate = (): string | null => {
+    if (!street.trim()) return 'Street is required.';
+    if (!postcode.trim()) return 'Postcode is required.';
+    if (!city.trim()) return 'City is required.';
+    if (stateField.kind === 'select' && !state.trim()) return 'State / region is required.';
+    return null;
+  };
+
+  const save = async () => {
+    const problem = validate();
+    if (problem) {
+      setError(problem);
+      return;
+    }
+    setError(null);
+    try {
+      await updateShop({
+        shopId: shop.id,
+        body: {
+          address: {
+            street: street.trim(),
+            postcode: postcode.trim(),
+            city: city.trim(),
+            ...(stateField.kind === 'select' ? { state: state.trim() } : {}),
+          },
+        },
+      }).unwrap();
+      setSaved(true);
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not save the address. Please try again.'));
+    }
+  };
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+      onClick={close}
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="address-title"
+        className="glass-card bg-white p-6 w-full max-w-md max-h-full overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="address-title" className="text-lg font-semibold text-indigo-900 mb-4">
+          Address for {shop.name}
+        </h2>
+        <div className="space-y-3 mb-4">
+          <label className="block text-sm text-gray-600">
+            Street
+            <input
+              type="text"
+              value={street}
+              onChange={(e) => {
+                setStreet(e.target.value);
+                setSaved(false);
+              }}
+              disabled={readOnly || isSaving}
+              className={inputClass}
+            />
+          </label>
+          <label className="block text-sm text-gray-600">
+            Postcode
+            <input
+              type="text"
+              value={postcode}
+              onChange={(e) => {
+                setPostcode(e.target.value);
+                setSaved(false);
+              }}
+              disabled={readOnly || isSaving}
+              className={inputClass}
+            />
+          </label>
+          <label className="block text-sm text-gray-600">
+            City
+            <input
+              type="text"
+              value={city}
+              onChange={(e) => {
+                setCity(e.target.value);
+                setSaved(false);
+              }}
+              disabled={readOnly || isSaving}
+              className={inputClass}
+            />
+          </label>
+          {stateField.kind === 'select' && (
+            <label className="block text-sm text-gray-600">
+              State / region
+              <select
+                value={stateField.value}
+                onChange={(e) => {
+                  setState(e.target.value);
+                  setSaved(false);
+                }}
+                disabled={readOnly || isSaving}
+                className={inputClass}
+              >
+                <option value="">Select…</option>
+                {stateField.options.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+          <label className="block text-sm text-gray-600">
+            Country
+            <input
+              type="text"
+              value={detail.address?.country ?? detail.countryCode ?? ''}
+              disabled
+              readOnly
+              className={inputClass}
+            />
+          </label>
+        </div>
+        {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+        {saved && <p className="text-sm text-green-700 mb-4">Address saved.</p>}
+        <div className="flex justify-end gap-2">
+          <button
+            onClick={close}
+            disabled={isSaving}
+            className="px-3 py-1.5 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+          >
+            {readOnly || saved ? 'Close' : 'Cancel'}
+          </button>
+          {!readOnly && (
+            <button
+              onClick={save}
+              disabled={isSaving}
+              className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+            >
+              {isSaving ? 'Saving...' : 'Save'}
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export function ShopsPage() {
   usePageTitle('Shops');
@@ -50,6 +276,8 @@ export function ShopsPage() {
   const [limitError, setLimitError] = useState<string | null>(null);
   const [setMissedOrdersPauseLimit, { isLoading: isSavingLimit }] =
     useSetMissedOrdersPauseLimitMutation();
+
+  const [addressTarget, setAddressTarget] = useState<ShopSummaryDto | null>(null);
 
   const { active: activeCount, deleted: deletedCount } = countShops(shops?.shops ?? []);
   const subtitle =
@@ -286,6 +514,25 @@ export function ShopsPage() {
                           Activity
                           <ArrowRight className="w-3 h-3" />
                         </Link>
+                        {!shop.isDeleted && (
+                          !canWrite ? (
+                            <button
+                              onClick={() => setAddressTarget(shop)}
+                              aria-label={`Address for ${shop.name}`}
+                              className="inline-flex items-center py-2 text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors"
+                            >
+                              Address
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() => setAddressTarget(shop)}
+                              aria-label={`Address for ${shop.name}`}
+                              className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                            >
+                              Address
+                            </button>
+                          )
+                        )}
                         {!canWrite && !shop.isDeleted && (
                           <span
                             aria-label={`${missedOrdersLimitLabel(missedOrdersLimitOf(shop))} for ${shop.name}`}
@@ -400,6 +647,25 @@ export function ShopsPage() {
                         Activity
                         <ArrowRight className="w-3 h-3" />
                       </Link>
+                      {!shop.isDeleted && (
+                        !canWrite ? (
+                          <button
+                            onClick={() => setAddressTarget(shop)}
+                            aria-label={`Address for ${shop.name}`}
+                            className="inline-flex items-center py-2 text-gray-500 hover:text-gray-700 text-xs font-medium transition-colors"
+                          >
+                            Address
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => setAddressTarget(shop)}
+                            aria-label={`Address for ${shop.name}`}
+                            className="inline-flex items-center py-2 text-indigo-600 hover:text-indigo-800 text-xs font-medium transition-colors"
+                          >
+                            Address
+                          </button>
+                        )
+                      )}
                       {!canWrite && !shop.isDeleted && (
                         <span
                           aria-label={`${missedOrdersLimitLabel(missedOrdersLimitOf(shop))} for ${shop.name}`}
@@ -560,6 +826,14 @@ export function ShopsPage() {
             </div>
           </div>
         </div>
+      )}
+      {addressTarget && (
+        <AddressDialog
+          key={addressTarget.id}
+          shop={addressTarget}
+          canWrite={canWrite}
+          onClose={() => setAddressTarget(null)}
+        />
       )}
       {offlineTarget && (() => {
         const goOffline = !offlineTarget.offlineBySuperadmin;

@@ -3112,6 +3112,7 @@ export type ShopSummaryDto = {
   currency: string;
   timezone: string;
   minOrderAmountCents: number;
+  addressLocked: boolean;
   address: {
     street?: string;
     city?: string;
@@ -3247,6 +3248,7 @@ export type GetShopResultDto = {
   currency: string;
   timezone: string;
   minOrderAmountCents: number;
+  addressLocked: boolean;
   address: {
     street?: string;
     city?: string;
@@ -3306,6 +3308,7 @@ export type GetShopResultDto = {
     connectOnboardingStatus: ("not_started" | "pending" | "complete") | null;
   } | null;
   orderSettings: OrderSettings;
+  scheduleHorizonDays: number;
   createdAt: string;
   updatedAt: string;
 };
