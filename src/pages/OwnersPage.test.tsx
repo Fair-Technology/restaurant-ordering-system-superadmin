@@ -13,7 +13,7 @@ const h = vi.hoisted(() => ({
   canWrite: true,
   listArgs: [] as unknown[],
   total: 45,
-  config: { maxShopsDefault: 3, emailEnabled: true, emailTransportConfigured: true } as Record<string, unknown>,
+  config: { maxShopsDefault: 3, emailEnabled: true, scheduleHorizonDays: 4, emailTransportConfigured: true } as Record<string, unknown>,
   saving: false,
   updateLimits: vi.fn(),
   updateConfig: vi.fn(),
@@ -38,7 +38,7 @@ const fail = (error: string) => ({ unwrap: () => Promise.reject({ data: { error 
 
 beforeEach(() => {
   h.canWrite = true;
-  h.config = { maxShopsDefault: 3, emailEnabled: true, emailTransportConfigured: true };
+  h.config = { maxShopsDefault: 3, emailEnabled: true, scheduleHorizonDays: 4, emailTransportConfigured: true };
   h.saving = false;
   h.listArgs = [];
   h.updateLimits.mockReset().mockReturnValue(ok());
@@ -284,5 +284,45 @@ describe('Order emails card', () => {
     h.canWrite = false;
     render(<OwnersPage />);
     expect(sw().matches(':disabled')).toBe(true);
+  });
+});
+
+describe('Order ahead limit card', () => {
+  const field = () => screen.getByLabelText('Order ahead limit (days)') as HTMLInputElement;
+  // Save buttons render in card order: default max shops, then order ahead limit.
+  const saveBtn = () => screen.getAllByText('Save')[1] as HTMLButtonElement;
+
+  it('renders the current value', () => {
+    render(<OwnersPage />);
+    expect(field().value).toBe('4');
+    expect(saveBtn().disabled).toBe(true); // unchanged
+  });
+
+  it('rejects 0, 7 and non-integer values', () => {
+    render(<OwnersPage />);
+    for (const bad of ['0', '7', '2.5']) {
+      fireEvent.change(field(), { target: { value: bad } });
+      expect(saveBtn().disabled).toBe(true);
+      expect(screen.getByText('Enter a whole number from 1 to 6.')).toBeTruthy();
+    }
+  });
+
+  it('saves a valid value and shows success', async () => {
+    render(<OwnersPage />);
+    fireEvent.change(field(), { target: { value: '2' } });
+    expect(saveBtn().disabled).toBe(false);
+    fireEvent.click(saveBtn());
+    await waitFor(() =>
+      expect(h.updateConfig).toHaveBeenCalledWith({ updateSystemConfigRequestDto: { scheduleHorizonDays: 2 } }),
+    );
+    expect(await screen.findByText('Order ahead limit updated.')).toBeTruthy();
+  });
+
+  it('shows the server error when the mutation rejects', async () => {
+    h.updateConfig.mockReturnValue(fail('Horizon too large'));
+    render(<OwnersPage />);
+    fireEvent.change(field(), { target: { value: '2' } });
+    fireEvent.click(saveBtn());
+    await waitFor(() => expect(screen.getByText('Horizon too large')).toBeTruthy());
   });
 });

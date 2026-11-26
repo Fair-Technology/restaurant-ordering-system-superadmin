@@ -360,6 +360,104 @@ function OrderEmailsCard() {
   );
 }
 
+const MIN_HORIZON_DAYS = 1;
+const MAX_HORIZON_DAYS = 6;
+
+function parseHorizonDays(value: string): number | null {
+  if (!/^\d+$/.test(value.trim())) return null;
+  const n = Number(value);
+  return n >= MIN_HORIZON_DAYS && n <= MAX_HORIZON_DAYS ? n : null;
+}
+
+function OrderAheadLimitCard() {
+  const { data: config } = useGetSystemConfigQuery();
+  const [updateSystemConfig, { isLoading: isSaving }] = useUpdateSystemConfigMutation();
+  const [draft, setDraft] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!success) return;
+    const id = setTimeout(() => setSuccess(null), 3000);
+    return () => clearTimeout(id);
+  }, [success]);
+
+  const current = config?.scheduleHorizonDays;
+  const value = draft ?? (current !== undefined ? String(current) : '');
+  const parsed = parseHorizonDays(value);
+  const invalid = value !== '' && parsed === null;
+  const canSave = parsed !== null && parsed !== current && !isSaving;
+
+  const save = async () => {
+    if (parsed === null) return;
+    setError(null);
+    setSuccess(null);
+    try {
+      await updateSystemConfig({ updateSystemConfigRequestDto: { scheduleHorizonDays: parsed } }).unwrap();
+      setDraft(null);
+      setSuccess('Order ahead limit updated.');
+    } catch (err) {
+      setError(apiErrorMessage(err, 'Could not save the order ahead limit. Please try again.'));
+    }
+  };
+
+  return (
+    <div className="glass-card p-4 w-full sm:max-w-sm">
+      <WriteFieldset>
+        <label
+          htmlFor="order-ahead-limit"
+          className="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1"
+        >
+          Order ahead limit (days)
+        </label>
+        <div className="flex items-center gap-2">
+          <input
+            id="order-ahead-limit"
+            type="number"
+            min={1}
+            max={6}
+            step={1}
+            inputMode="numeric"
+            value={value}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              setError(null);
+              setSuccess(null);
+            }}
+            aria-invalid={invalid}
+            className="w-24 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-300"
+          />
+          <button
+            onClick={save}
+            disabled={!canSave}
+            className="px-3 py-1.5 text-sm rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+          >
+            {isSaving ? 'Saving...' : 'Save'}
+          </button>
+          {isSaving && (
+            <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+              <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+            </span>
+          )}
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          The furthest day a diner can book a collection or delivery order for. The diner&apos;s card is only held, not
+          charged, until the order is due — and card holds generally last about 7 days, so the limit can&apos;t go above
+          6 days.
+        </p>
+        <p className="text-xs text-gray-500 mt-1">Changing this does not affect orders already booked.</p>
+      </WriteFieldset>
+      {invalid && <p className="text-xs text-red-500 mt-1">Enter a whole number from 1 to 6.</p>}
+      {success && (
+        <p role="status" className="text-xs text-green-600 mt-2">
+          {success}
+        </p>
+      )}
+      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+    </div>
+  );
+}
+
 export function OwnersPage() {
   usePageTitle('Owners');
   const canWrite = useCanWrite();
@@ -398,6 +496,7 @@ export function OwnersPage() {
         <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto">
           <DefaultMaxShopsCard />
           <OrderEmailsCard />
+          <OrderAheadLimitCard />
         </div>
       </div>
 
