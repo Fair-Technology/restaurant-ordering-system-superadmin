@@ -81,6 +81,13 @@ describe('Sidebar active link', () => {
   });
 });
 
+describe('Sidebar Settings link', () => {
+  it('exists and is current on /settings', () => {
+    renderAt('/settings');
+    expect(screen.getByRole('link', { name: 'Settings' }).getAttribute('aria-current')).toBe('page');
+  });
+});
+
 describe('Sidebar Orders item', () => {
   it('is an aria-disabled, non-focusable link without a shop in the URL', () => {
     renderAt('/plans');

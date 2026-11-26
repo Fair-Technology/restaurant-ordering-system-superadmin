@@ -72,7 +72,7 @@ describe('every routed page sets a title', () => {
     ShopSubscription: 'Subscription', ShopUsage: 'Usage', RejectionWatch: 'Decline Watch',
     Plans: 'Plans', EditPlan: 'Edit Plan', PlanPricing: 'Plan Pricing', RolePermissions: 'Roles',
     ReferenceLists: 'Food & Tax Lists', PlatformLegal: 'Legal', NameChangeRequests: 'Name Changes',
-    ContentReports: 'Content Reports', Login: 'Login', NotFound: 'Not Found',
+    ContentReports: 'Content Reports', Settings: 'Settings', Login: 'Login', NotFound: 'Not Found',
     AccessDenied: 'Access Denied', ProfileLoadError: 'Profile Error', RouteError: 'Error',
   };
   const sources = import.meta.glob<string>('./*Page.tsx', { query: '?raw', import: 'default', eager: true });

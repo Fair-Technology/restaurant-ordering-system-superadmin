@@ -14,6 +14,7 @@ import { PlanPricingPage } from '../pages/PlanPricingPage';
 import { ShopSubscriptionPage } from '../pages/ShopSubscriptionPage';
 import { ShopUsagePage } from '../pages/ShopUsagePage';
 import { NameChangeRequestsPage } from '../pages/NameChangeRequestsPage';
+import { SettingsPage } from '../pages/SettingsPage';
 import { ContentReportsPage } from '../pages/ContentReportsPage';
 import { RolePermissionsPage } from '../pages/RolePermissionsPage';
 import { ReferenceListsPage } from '../pages/ReferenceListsPage';
@@ -52,6 +53,7 @@ export const router = createBrowserRouter([
       { path: 'platform-legal', element: <PlatformLegalPage /> },
       { path: 'name-change-requests', element: <NameChangeRequestsPage /> },
       { path: 'content-reports', element: <ContentReportsPage /> },
+      { path: 'settings', element: <SettingsPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
