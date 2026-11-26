@@ -395,6 +395,8 @@ const injectedRtkApi = api
           params: {
             page: queryArg.page,
             pageSize: queryArg.pageSize,
+            area: queryArg.area,
+            actor: queryArg.actor,
           },
         }),
         providesTags: ["Audit"],
@@ -1571,6 +1573,8 @@ export type GetAuditEntriesApiArg = {
   shopId: string;
   page?: number;
   pageSize?: number;
+  area?: string;
+  actor?: string;
 };
 export type SetBusyModeApiResponse = /** status 200 Success */ BusyState;
 export type SetBusyModeApiArg = {
@@ -2266,6 +2270,7 @@ export type RejectReason =
 export type CustomerOrderDto = {
   orderId: string;
   orderRef: string;
+  emailsEnabled: boolean;
   shopSlug: string;
   shopName: string;
   sellerPhone: string | null;
@@ -2633,12 +2638,16 @@ export type SetPlanPricingRequestDto = {
 };
 export type GetSystemConfigResultDto = {
   maxShopsDefault: number;
+  emailEnabled: boolean;
+  emailTransportConfigured: boolean;
 };
 export type UpdateSystemConfigResultDto = {
   maxShopsDefault: number;
+  emailEnabled: boolean;
 };
 export type UpdateSystemConfigRequestDto = {
-  maxShopsDefault: number;
+  maxShopsDefault?: number;
+  emailEnabled?: boolean;
 };
 export type ContentReportCategory =
   | "illegal_goods"
@@ -3040,7 +3049,7 @@ export type CreateShopRequestDto = {
       close: string;
     }[];
   };
-  industry: string;
+  industry?: string;
   pausedMessage?: string;
   orderAcceptanceMode?: "auto";
   closures?: {
@@ -3310,6 +3319,10 @@ export type GetAuditEntriesResultDto = {
   actorLabels: {
     [key: string]: string;
   };
+  actors: {
+    key: string;
+    label: string;
+  }[];
 };
 export type BusyState = {
   active: boolean;

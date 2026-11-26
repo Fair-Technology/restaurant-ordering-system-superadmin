@@ -8,7 +8,7 @@ import {
   type OwnerSummaryDto,
 } from '../services/api';
 import { apiErrorMessage } from '../utils/apiError';
-import { Search, ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Loader2, User } from 'lucide-react';
 import { ScrollableTableCard } from '../components/ui/ScrollableTableCard';
 import { LoadingScreen } from '../components/ui/LoadingScreen';
 import { WriteFieldset } from '../auth/WriteOnly';
@@ -246,6 +246,120 @@ function DefaultMaxShopsCard() {
   );
 }
 
+function OrderEmailsCard() {
+  const { data: config } = useGetSystemConfigQuery();
+  const [updateSystemConfig, { isLoading: isSaving }] = useUpdateSystemConfigMutation();
+  const [confirmingOff, setConfirmingOff] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!success) return;
+    const id = setTimeout(() => setSuccess(null), 3000);
+    return () => clearTimeout(id);
+  }, [success]);
+
+  // Always derived from the server value, so a failed PATCH leaves the switch at its last known-good state.
+  const enabled = config?.emailEnabled === true;
+
+  const save = async (next: boolean) => {
+    setError(null);
+    setSuccess(null);
+    try {
+      await updateSystemConfig({ updateSystemConfigRequestDto: { emailEnabled: next } }).unwrap();
+      setConfirmingOff(false);
+      setSuccess(next ? 'Order emails turned on.' : 'Order emails turned off.');
+    } catch (err) {
+      setConfirmingOff(false);
+      setError(apiErrorMessage(err, 'Could not update order emails. Please try again.'));
+    }
+  };
+
+  const onToggle = () => {
+    if (enabled) {
+      setError(null);
+      setSuccess(null);
+      setConfirmingOff(true);
+    } else {
+      void save(true);
+    }
+  };
+
+  return (
+    <div className="glass-card p-4 w-full sm:max-w-sm">
+      <WriteFieldset>
+        <div className="flex items-center justify-between gap-3">
+          <span id="order-emails-label" className="block text-xs font-medium text-gray-500 uppercase tracking-wider">
+            Order emails
+          </span>
+          <div className="flex items-center gap-2">
+            {isSaving && (
+              <span className="inline-flex items-center gap-1 text-xs text-gray-500">
+                <Loader2 className="w-3 h-3 animate-spin" /> Saving...
+              </span>
+            )}
+            <button
+              type="button"
+              role="switch"
+              aria-checked={enabled}
+              aria-labelledby="order-emails-label"
+              onClick={onToggle}
+              disabled={isSaving || config === undefined}
+              className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors disabled:opacity-50 ${
+                enabled ? 'bg-indigo-600' : 'bg-gray-300'
+              }`}
+            >
+              <span
+                className={`inline-block h-4 w-4 rounded-full bg-white transition-transform ${
+                  enabled ? 'translate-x-4' : 'translate-x-0.5'
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+        <p className="text-xs text-gray-500 mt-2">
+          When off, diners and restaurants get no emails: order confirmations, invoices, order-waiting alerts, vouchers
+          and warnings.
+        </p>
+        {confirmingOff && (
+          <div role="alert" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+            <p>Turn off order emails? No emails will be sent until you turn this back on.</p>
+            <div className="flex gap-2 mt-2">
+              <button
+                type="button"
+                onClick={() => void save(false)}
+                disabled={isSaving}
+                className="px-3 py-1 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+              >
+                Confirm
+              </button>
+              <button
+                type="button"
+                onClick={() => setConfirmingOff(false)}
+                disabled={isSaving}
+                className="px-3 py-1 rounded-lg border border-gray-200 hover:bg-gray-50 disabled:opacity-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </WriteFieldset>
+      {config?.emailTransportConfigured === false && (
+        <p role="note" className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-2 text-xs text-amber-800">
+          Email sending is not configured in this environment, so nothing will be sent even if this switch is on.
+        </p>
+      )}
+      {success && (
+        <p role="status" className="text-xs text-green-600 mt-2">
+          {success}
+        </p>
+      )}
+      {error && <p className="text-xs text-red-500 mt-2">{error}</p>}
+    </div>
+  );
+}
+
 export function OwnersPage() {
   usePageTitle('Owners');
   const canWrite = useCanWrite();
@@ -281,7 +395,10 @@ export function OwnersPage() {
           <h1 className="text-2xl font-semibold text-indigo-900">Owners</h1>
           <p className="text-sm text-gray-500 mt-0.5">{data ? `${total} owners total` : ''}</p>
         </div>
-        <DefaultMaxShopsCard />
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-start gap-4 w-full sm:w-auto">
+          <DefaultMaxShopsCard />
+          <OrderEmailsCard />
+        </div>
       </div>
 
       <div className="mb-4 relative w-full sm:w-72">

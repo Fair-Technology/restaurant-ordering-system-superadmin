@@ -13,6 +13,8 @@ const h = vi.hoisted(() => ({
   canWrite: true,
   listArgs: [] as unknown[],
   total: 45,
+  config: { maxShopsDefault: 3, emailEnabled: true, emailTransportConfigured: true } as Record<string, unknown>,
+  saving: false,
   updateLimits: vi.fn(),
   updateConfig: vi.fn(),
 }));
@@ -24,8 +26,8 @@ vi.mock('../services/api', () => ({
     h.listArgs.push(arg);
     return { data: { owners, total: h.total, page: 1, pageSize: 20 }, isLoading: false, isError: false };
   },
-  useGetSystemConfigQuery: () => ({ data: { maxShopsDefault: 3 } }),
-  useUpdateSystemConfigMutation: () => [h.updateConfig, { isLoading: false }],
+  useGetSystemConfigQuery: () => ({ data: h.config }),
+  useUpdateSystemConfigMutation: () => [h.updateConfig, { isLoading: h.saving }],
   useUpdateUserLimitsMutation: () => [h.updateLimits, { isLoading: false }],
 }));
 
@@ -36,6 +38,8 @@ const fail = (error: string) => ({ unwrap: () => Promise.reject({ data: { error 
 
 beforeEach(() => {
   h.canWrite = true;
+  h.config = { maxShopsDefault: 3, emailEnabled: true, emailTransportConfigured: true };
+  h.saving = false;
   h.listArgs = [];
   h.updateLimits.mockReset().mockReturnValue(ok());
   h.updateConfig.mockReset().mockReturnValue(ok());
@@ -205,5 +209,80 @@ describe('Default max shops field', () => {
     h.canWrite = false;
     render(<OwnersPage />);
     expect(field().matches(':disabled')).toBe(true);
+  });
+});
+
+describe('Order emails card', () => {
+  const sw = () => screen.getByRole('switch', { name: 'Order emails' }) as HTMLButtonElement;
+
+  it('renders the current state from the query', () => {
+    render(<OwnersPage />);
+    expect(sw().getAttribute('aria-checked')).toBe('true');
+    cleanup();
+    h.config = { ...h.config, emailEnabled: false };
+    render(<OwnersPage />);
+    expect(sw().getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('requires confirmation to turn off, and sends only emailEnabled', async () => {
+    render(<OwnersPage />);
+    fireEvent.click(sw());
+    expect(screen.getByText(/No emails will be sent until you turn this back on/)).toBeTruthy();
+    expect(h.updateConfig).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByText('Confirm'));
+    await waitFor(() =>
+      expect(h.updateConfig).toHaveBeenCalledWith({ updateSystemConfigRequestDto: { emailEnabled: false } }),
+    );
+    expect(await screen.findByText('Order emails turned off.')).toBeTruthy();
+    expect(screen.queryByText('Confirm')).toBeNull();
+  });
+
+  it('cancel dismisses the confirmation without a request', () => {
+    render(<OwnersPage />);
+    fireEvent.click(sw());
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(screen.queryByText('Confirm')).toBeNull();
+    expect(h.updateConfig).not.toHaveBeenCalled();
+  });
+
+  it('turns on without confirmation', async () => {
+    h.config = { ...h.config, emailEnabled: false };
+    render(<OwnersPage />);
+    fireEvent.click(sw());
+    expect(screen.queryByText('Confirm')).toBeNull();
+    await waitFor(() =>
+      expect(h.updateConfig).toHaveBeenCalledWith({ updateSystemConfigRequestDto: { emailEnabled: true } }),
+    );
+  });
+
+  it('shows the not-configured note only when emailTransportConfigured is false', () => {
+    render(<OwnersPage />);
+    expect(screen.queryByText(/Email sending is not configured/)).toBeNull();
+    cleanup();
+    h.config = { ...h.config, emailTransportConfigured: false };
+    render(<OwnersPage />);
+    expect(screen.getByText(/Email sending is not configured/)).toBeTruthy();
+  });
+
+  it('disables the toggle and shows Saving... while in flight', () => {
+    h.saving = true;
+    render(<OwnersPage />);
+    expect(sw().disabled).toBe(true);
+    expect(screen.getAllByText('Saving...').length).toBeGreaterThan(0);
+  });
+
+  it('shows the server error and keeps the last known-good state on failure', async () => {
+    h.config = { ...h.config, emailEnabled: false };
+    h.updateConfig.mockReturnValue(fail('Email service unavailable'));
+    render(<OwnersPage />);
+    fireEvent.click(sw());
+    await waitFor(() => expect(screen.getByText('Email service unavailable')).toBeTruthy());
+    expect(sw().getAttribute('aria-checked')).toBe('false');
+  });
+
+  it('is disabled for read-only operators', () => {
+    h.canWrite = false;
+    render(<OwnersPage />);
+    expect(sw().matches(':disabled')).toBe(true);
   });
 });
