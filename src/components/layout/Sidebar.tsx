@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   X,
   Settings,
+  ImagePlus,
 } from 'lucide-react';
 
 /** Tailwind `md` breakpoint. Keep in sync with the `md:` classes below. */
@@ -143,6 +144,10 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         <NavLink to="/platform-legal" className={navLinkClass} onClick={onClose}>
           <Scale className="w-4 h-4 flex-shrink-0" />
           Legal
+        </NavLink>
+        <NavLink to="/cover-images" className={navLinkClass} onClick={onClose}>
+          <ImagePlus className="w-4 h-4 flex-shrink-0" />
+          Cover images
         </NavLink>
         <NavLink to="/name-change-requests" className={navLinkClass} onClick={onClose}>
           <FileEdit className="w-4 h-4 flex-shrink-0" />
