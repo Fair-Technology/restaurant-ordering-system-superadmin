@@ -16,6 +16,7 @@ import {
   AlertTriangle,
   ShieldAlert,
   X,
+  Settings,
 } from 'lucide-react';
 
 /** Tailwind `md` breakpoint. Keep in sync with the `md:` classes below. */
@@ -146,6 +147,10 @@ export function Sidebar({ open = false, onClose }: SidebarProps) {
         <NavLink to="/name-change-requests" className={navLinkClass} onClick={onClose}>
           <FileEdit className="w-4 h-4 flex-shrink-0" />
           Name Changes
+        </NavLink>
+        <NavLink to="/settings" className={navLinkClass} onClick={onClose}>
+          <Settings className="w-4 h-4 flex-shrink-0" />
+          Settings
         </NavLink>
       </nav>
 

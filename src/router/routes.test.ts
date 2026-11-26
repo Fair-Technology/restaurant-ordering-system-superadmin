@@ -41,6 +41,10 @@ describe('route table', () => {
     const root = routes.find((r) => r.path === '/');
     expect(root?.children?.some((c) => c.path === 'content-reports')).toBe(true);
   });
+  it('routes the Settings page under the app layout route', () => {
+    const root = routes.find((r) => r.path === '/');
+    expect(root?.children?.some((c) => c.path === 'settings')).toBe(true);
+  });
   it('gives every top-level route an errorElement', () => {
     expect(routes.length).toBeGreaterThan(0);
     for (const r of routes) expect(isValidElement(r.errorElement)).toBe(true);
