@@ -47,6 +47,8 @@ export const ACTION_LABELS: Record<string, string> = {
   'shop.cover_image': 'updated cover image',
   'shop.cover_image_remove': 'removed cover image',
   'order.refund': 'refunded an order',
+  'order.accept': 'accepted an order',
+  'order.decline': 'declined an order',
   // Written by the system actor when a maintenance backfill recomputes an order's charges.
   'order.charges_backfilled': 'backfilled order charges',
   'optionGroup.create': 'created an option group',

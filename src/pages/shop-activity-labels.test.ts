@@ -37,6 +37,10 @@ describe('actionLabel', () => {
     expect(actionLabel('shop.busy_mode')).toBe('switched busy mode');
     expect(actionLabel('product.create')).toBe('created product');
   });
+  it('labels order accept and decline', () => {
+    expect(actionLabel('order.accept')).toBe('accepted an order');
+    expect(actionLabel('order.decline')).toBe('declined an order');
+  });
   it('does not claim the pause-limit setting paused ordering', () => {
     expect(actionLabel('shop.missed_orders_pause_limit')).not.toMatch(/^paused/);
   });
